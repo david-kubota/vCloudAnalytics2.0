@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Broadcast Grid 2.0</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .card { background-color: #1e293b; border: 1px solid #334155; }
+  input, select { background: #0f172a; border: 1px solid #334155; color: white; }
+  tr:hover { background-color: rgba(255,255,255,0.02); }
+  .tooltip { visibility: hidden; position: absolute; z-index: 50; padding: 8px; background: #ef4444; color: white; border-radius: 4px; font-size: 10px; width: 180px; bottom: 125%; left: 50%; transform: translateX(-50%); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); }
+  .has-tooltip:hover .tooltip { visibility: visible; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState } = React;
+
+  const App = () => {
+    const [broadcasts, setBroadcasts] = useState([
+      { id: 3568041, sport: "🏀", title: "Varsity Men's Basketball vs. Central High", date: "02/17/2026", time: "7:00 PM", site: "Pittsburg State", status: "Live", source: "Production Truck", privacy: "Public", ppv: "Yes" },
+      { id: 3666919, sport: "⚾", title: "Baseball: Lions vs. Tigers Double Header", date: "02/17/2026", time: "1:00 PM", site: "MIAA Premium", status: "Archived", source: "Hudl Focus", privacy: "Public", ppv: "No" },
+      { id: 3676742, sport: "🏐", title: "Women's Volleyball Invitational", date: "02/18/2026", time: "5:00 PM", site: "Northeastern State", status: "Upcoming", source: "Hudl App", privacy: "Private", ppv: "No" },
+      { id: 3686948, sport: "🏈", title: "Varsity Football: Friday Night Lights", date: "02/19/2026", time: "7:30 PM", site: "Glenburn HS", status: "Error", source: "RTMP", errorMsg: "Encoder dropped connection: Invalid Stream Key provided in Production Truck settings.", privacy: "Public", ppv: "Yes" },
+      { id: 2975037, sport: "🤼", title: "Regional Wrestling Finals", date: "02/15/2026", time: "3:00 PM", site: "Central Missouri", status: "Stopped", source: "Production Truck", privacy: "Public", ppv: "No" }
+    ]);
+
+    const getStatusStyle = (status) => {
+      const styles = {
+        Live: "bg-green-900/30 text-green-400 border-green-800",
+        Upcoming: "bg-blue-900/30 text-blue-400 border-blue-800",
+        Archived: "bg-slate-700/30 text-slate-400 border-slate-600",
+        Stopped: "bg-yellow-900/30 text-yellow-500 border-yellow-800",
+        Error: "bg-red-900/30 text-red-400 border-red-800"
+      };
+      return styles[status] || styles.Archived;
+    };
+
+    return (
+      <div className="p-8 max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+           <nav className="text-xs text-slate-500 flex gap-2">
+            <a href="index.html" className="hover:text-white transition">Home</a> / <span className="text-slate-300">Broadcast Grid 2.0</span>
+          </nav>
+          <button className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-2 rounded-lg font-bold text-sm transition shadow-lg shadow-orange-900/20">
+            + Create Livestream
+          </button>
+        </div>
+
+        {/* Search & Export Bar */}
+        <div className="flex gap-4 mb-8 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+          <div className="relative flex-1">
+            <input type="text" placeholder="Search title, ID, or site..." className="w-full p-2 pl-10 rounded-lg text-sm focus:outline-none focus:border-orange-500 transition" />
+            <span className="absolute left-3 top-2.5 opacity-30">🔍</span>
+          </div>
+          <select className="text-sm rounded-lg px-4 bg-slate-900 border-slate-700">
+            <option>All Sports</option>
+            <option>Basketball</option>
+            <option>Football</option>
+          </select>
+          <button className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition">
+            Export CSV
+          </button>
+        </div>
+
+        {/* Data Grid */}
+        <div className="card rounded-xl overflow-hidden shadow-2xl">
+          <table className="w-full text-left text-sm border-collapse">
+            <thead className="bg-slate-800 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-700">
+              <tr>
+                <th className="p-4">Sport</th>
+                <th className="p-4">Broadcast Details</th>
+                <th className="p-4">Site / Customer</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Source</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {broadcasts.map(b => (
+                <tr key={b.id} className="transition group">
+                  <td className="p-4 text-2xl">{b.sport}</td>
+                  <td className="p-4">
+                    <div className="font-bold text-slate-100 group-hover:text-orange-400 transition">{b.title}</div>
+                    <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-tighter">ID: {b.id} • {b.date} @ {b.time}</div>
+                    
+                    {/* Quick Actions Row */}
+                    <div className="flex gap-3 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="text-[9px] font-bold text-slate-500 hover:text-white uppercase">Title</button>
+                        <button className="text-[9px] font-bold text-slate-500 hover:text-white uppercase">Time</button>
+                        <button className="text-[9px] font-bold text-slate-500 hover:text-white uppercase">Source</button>
+                        <button className="text-[9px] font-bold text-slate-500 hover:text-white uppercase">{b.privacy}</button>
+                        <button className="text-[9px] font-bold text-slate-500 hover:text-white uppercase">PPV: {b.ppv}</button>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="text-slate-300 font-medium">{b.site}</div>
+                    <div className="text-[10px] text-slate-500 mt-1">MIAA Conference</div>
+                  </td>
+                  <td className="p-4">
+                    <div className={`relative inline-block has-tooltip`}>
+                        <span className={`px-2 py-1 rounded-md text-[10px] font-black uppercase border ${getStatusStyle(b.status)}`}>
+                            {b.status === 'Live' && <span className="inline-block w-1.5 h-1.5 bg-green-400 rounded-full mr-1 animate-pulse"></span>}
+                            {b.status}
+                        </span>
+                        {b.status === 'Error' && (
+                            <div className="tooltip">
+                                <strong>System Alert:</strong><br/>{b.errorMsg}
+                            </div>
+                        )}
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <div className="text-[11px] font-bold text-slate-400">{b.source}</div>
+                  </td>
+                  <td className="p-4 text-right">
+                    <div className="flex justify-end gap-2">
+                        <button className="p-2 hover:bg-slate-700 rounded transition text-blue-400" title="Full Edit">⚙️</button>
+                        <button className="p-2 hover:bg-red-900/30 rounded transition text-red-500" title="Delete">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
