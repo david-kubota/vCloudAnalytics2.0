@@ -3,138 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hudl TV Multi-View Monitor v5</title>
+    <title>Hudl Multi-View Monitor</title>
     <style>
-        :root { --bg: #020617; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --primary: #f97316; }
-        body { background-color: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; height: 100vh; overflow: hidden; }
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #f97316;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; }
         
-        .top-bar { height: 48px; background: #0f172a; border-bottom: 1px solid #334155; display: flex; align-items: center; padding: 0 20px; justify-content: space-between; }
-        .grid-container { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; height: calc(100vh - 48px); padding: 12px; box-sizing: border-box; }
-        
-        .viewport { background: var(--card); border: 1px solid #334155; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .video-box { width: 100%; aspect-ratio: 16/9; background: #000; flex-shrink: 0; }
-        .video-box iframe { width: 100%; height: 100%; border: none; }
-        
-        .data-section { flex: 1; padding: 12px; overflow-y: auto; background: #0f172a; border-top: 1px solid #334155; }
-        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
-        
-        .field { margin-bottom: 10px; }
-        .label { font-size: 10px; font-weight: bold; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
-        .value { font-size: 13px; color: #fff; }
-        
-        .status-badge { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #166534; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; display: inline-block; }
-        
-        input, select { background: #1e293b; border: 1px solid #334155; color: white; padding: 8px; border-radius: 4px; width: 100%; margin-top: 5px; box-sizing: border-box; }
-        button { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
-        .details-btn { background: #334155; color: #fff; text-decoration: none; padding: 8px; display: block; text-align: center; border-radius: 4px; font-size: 11px; font-weight: bold; margin-top: 10px; border: 1px solid #475569; }
-        
-        .close-btn { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.5); border: none; color: white; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; z-index: 10; font-weight: bold; }
-        .contact-box { background: rgba(15, 23, 42, 0.5); border: 1px solid #334155; padding: 10px; border-radius: 4px; margin-top: 10px; }
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Navigation Bar */
+        .top-bar {
+            height: 50px;
+            background: #020617;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            flex-shrink: 0;
+        }
+        .logo { font-weight: 800; letter-spacing: 0.05em; font-size: 14px; }
+        .logo span { color: var(--primary); }
+        .nav-link { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 600; }
+        .nav-link:hover { color: #fff; }
+
+        /* Main Grid */
+        .grid-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+            padding: 10px;
+            height: calc(100vh - 50px);
+        }
+
+        /* Viewport Card */
+        .viewport {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Empty State */
+        .empty-state {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+        .empty-input {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 10px;
+            border-radius: 4px;
+            color: white;
+            width: 250px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .load-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+        .load-btn:hover { background: #ea580c; }
+
+        /* Video Area */
+        .video-container {
+            width: 100%;
+            background: #000;
+            /* 16:9 Aspect Ratio logic */
+            aspect-ratio: 16/9; 
+            position: relative;
+            flex-shrink: 0;
+        }
+        iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Data Panel (Below Video) */
+        .data-panel {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Field Groups */
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
+
+        .label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .value {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .contact-info {
+            font-size: 12px;
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Controls */
+        select {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        select:focus { outline: 1px solid var(--primary); }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .close-btn:hover { background: var(--danger); }
+
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div style="font-weight: bold; font-size: 14px;">HUDL TV MONITOR <span style="color:var(--primary); font-size: 10px; margin-left: 10px;">V5 (NO-BABEL)</span></div>
-        <a href="index.html" style="color: var(--muted); text-decoration: none; font-size: 12px;">Back to Menu</a>
+        <div class="logo">HUDL <span>MONITOR</span></div>
+        <a href="index.html" class="nav-link">Exit to Menu</a>
     </div>
 
     <div class="grid-container" id="grid">
         </div>
 
     <script>
-        // Data Store
-        const states = [
-            { id: null, quality: '' },
-            { id: null, quality: '' },
-            { id: null, quality: '' },
-            { id: null, quality: '' }
+        // State management for the 4 slots
+        const viewports = [
+            { id: 0, streamId: null },
+            { id: 1, streamId: null },
+            { id: 2, streamId: null },
+            { id: 3, streamId: null }
         ];
-
-        function updateSlot(index, id) {
-            states[index].id = id;
-            render();
-        }
-
-        function clearSlot(index) {
-            states[index].id = null;
-            render();
-        }
 
         function render() {
             const grid = document.getElementById('grid');
             grid.innerHTML = '';
 
-            states.forEach((state, index) => {
-                const viewport = document.createElement('div');
-                viewport.className = 'viewport';
+            viewports.forEach((vp, index) => {
+                const el = document.createElement('div');
+                el.className = 'viewport';
 
-                if (!state.id) {
-                    // --- EMPTY STATE ---
-                    viewport.innerHTML = `
+                if (!vp.streamId) {
+                    // EMPTY STATE
+                    el.innerHTML = `
                         <div class="empty-state">
-                            <div style="font-size: 10px; font-weight: bold; color: #475569; margin-bottom: 10px;">VIEWPORT ${index + 1}</div>
-                            <div style="padding: 20px;">
-                                <input type="text" id="input-${index}" placeholder="Enter Broadcast ID">
-                                <button onclick="const val = document.getElementById('input-${index}').value; if(val) updateSlot(${index}, val)">LOAD BROADCAST</button>
-                            </div>
+                            <div class="label">Viewport ${index + 1}</div>
+                            <input type="text" id="input-${index}" class="empty-input" placeholder="Enter Broadcast ID or URL">
+                            <button class="load-btn" onclick="loadStream(${index})">Load Stream</button>
                         </div>
                     `;
                 } else {
-                    // --- ACTIVE MONITOR STATE ---
-                    viewport.innerHTML = `
-                        <button class="close-btn" onclick="clearSlot(${index})">&times;</button>
-                        <div class="video-box">
-                            <iframe src="https://vcloud.hudl.com/broadcast/embed/${state.id}?autoplay=1" allow="autoplay; fullscreen"></iframe>
+                    // ACTIVE STATE (Video + Fields)
+                    el.innerHTML = `
+                        <button class="close-btn" onclick="clearStream(${index})">&times;</button>
+                        
+                        <div class="video-container">
+                            <iframe src="https://vcloud.hudl.com/broadcast/embed/${vp.streamId}?autoplay=1" allow="autoplay; fullscreen"></iframe>
                         </div>
-                        <div class="data-section">
-                            <div class="field">
-                                <div class="status-badge">STREAMING</div>
-                            </div>
-                            <div class="field">
+
+                        <div class="data-panel">
+                            <div class="col">
                                 <div class="label">Broadcast Title</div>
-                                <div class="value" style="color: var(--primary); font-weight: bold;">Varsity Matchup - ID: ${state.id}</div>
+                                <div class="value" style="color: #fff; font-weight:bold;">Varsity Matchup - ID: ${vp.streamId}</div>
+                                <div class="value" style="font-size:11px; color:var(--text-muted);">Starts: 02/16/2026 @ 7:00 PM EST</div>
                             </div>
-                            <div style="display: flex; gap: 10px;">
-                                <div class="field" style="flex: 1;">
-                                    <div class="label">Site / School</div>
-                                    <div class="value">Lincoln East High School</div>
-                                </div>
-                                <div class="field" style="flex: 1;">
-                                    <div class="label">Scheduled</div>
-                                    <div class="value">02/16/2026 7PM</div>
+
+                            <div class="contact-info">
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="label" style="margin:0;">Contact Name</div>
+                                        <div>John Smith (AD)</div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="label" style="margin:0;">Phone</div>
+                                        <div style="color:var(--primary);">555-0199</div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="contact-box">
-                                <div class="label" style="color: #3b82f6;">Support Contact</div>
-                                <div style="font-size: 12px; font-weight: bold; margin-top: 5px;">John Smith</div>
-                                <div style="font-size: 11px; color: #fb923c; margin-top: 2px;">Phone: 555-0199</div>
-                                <div style="font-size: 11px; color: #fb923c;">Email: jsmith@lincolneast.edu</div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="label">Status</div>
+                                    <select>
+                                        <option value="live">Live</option>
+                                        <option value="upcoming">Upcoming</option>
+                                        <option value="archived">Archived</option>
+                                        <option value="stopped">Stopped</option>
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <div class="label">Assignee</div>
+                                    <select>
+                                        <option value="">Unassigned</option>
+                                        <option value="troy">Troy Comeau</option>
+                                        <option value="kerry">Kerry Stadler</option>
+                                        <option value="support">General Support</option>
+                                    </select>
+                                </div>
                             </div>
 
-                            <div class="field" style="margin-top: 15px;">
-                                <div class="label">Quality Check</div>
-                                <select onchange="console.log('Quality updated for ${state.id}')">
-                                    <option value="">Select Status...</option>
-                                    <option value="good">Overall Good</option>
-                                    <option value="audio">Poor / No Audio</option>
-                                    <option value="video">Poor / No Video</option>
-                                    <option value="score">No Scoreboard</option>
-                                    <option value="delay">Delayed</option>
+                            <div class="col">
+                                <div class="label">Quality Report</div>
+                                <select style="border-color: #334155;">
+                                    <option value="">Select Quality...</option>
+                                    <option value="good">🟢 Overall Good</option>
+                                    <option value="audio_bad">🟡 Audio Issues</option>
+                                    <option value="video_bad">🟡 Video Issues</option>
+                                    <option value="no_score">🟡 No Scoreboard</option>
+                                    <option value="bad">🔴 Overall Bad</option>
                                 </select>
                             </div>
-
-                            <a href="https://hudl.com/admin/broadcast/${state.id}" target="_blank" class="details-btn">VIEW FULL BROADCAST DETAILS</a>
                         </div>
                     `;
                 }
-                grid.appendChild(viewport);
+                grid.appendChild(el);
             });
         }
 
-        // Initial Render
+        function loadStream(index) {
+            const input = document.getElementById(`input-${index}`);
+            let val = input.value.trim();
+            
+            // Extract ID if full URL is pasted
+            const match = val.match(/\/embed\/(\d+)/) || val.match(/broadcast\/(\d+)/);
+            if (match) val = match[1];
+
+            if (val) {
+                viewports[index].streamId = val;
+                render();
+            }
+        }
+
+        function clearStream(index) {
+            viewports[index].streamId = null;
+            render();
+        }
+
+        // Initial render
         render();
+
     </script>
 </body>
 </html>
