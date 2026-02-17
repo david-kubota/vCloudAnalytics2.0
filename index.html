@@ -3,10 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hudl Analytics Suite</title>
+<title>Hudl Support Suite</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --primary: #f97316; --border: #334155; }
+  :root { 
+    --bg: #0f172a; 
+    --card: #1e293b; 
+    --text: #f8fafc; 
+    --primary: #f97316; 
+    --border: #334155; 
+  }
   * { box-sizing: border-box; }
   body { 
     font-family: 'Inter', sans-serif; 
@@ -20,26 +26,25 @@
     margin: 0; 
     padding: 2rem;
   }
-  h1 { font-size: 2.5rem; margin-bottom: 3rem; text-align: center; }
+  h1 { font-size: 2.5rem; margin-bottom: 3rem; text-align: center; font-weight: 800; }
   
   .grid { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-    gap: 2rem; 
+    gap: 1.5rem; 
     width: 100%; 
-    max-width: 1100px; 
+    max-width: 1200px; 
   }
   
   .card { 
     background: var(--card); 
     border: 1px solid var(--border); 
     border-radius: 1rem; 
-    padding: 2.5rem; 
+    padding: 2rem; 
     text-align: center; 
     text-decoration: none; 
     color: white; 
     transition: all 0.2s ease; 
-    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -49,42 +54,65 @@
   .card:hover { 
     transform: translateY(-5px); 
     border-color: var(--primary); 
-    box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.3); 
+    box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.4); 
   }
   
-  .icon { font-size: 4rem; margin-bottom: 1rem; display: block; }
-  .title { font-size: 1.5rem; font-weight: 700; display: block; margin-bottom: 0.75rem; }
-  .desc { color: #94a3b8; font-size: 0.95rem; line-height: 1.5; }
+  .icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+  .title { font-size: 1.25rem; font-weight: 700; display: block; margin-bottom: 0.75rem; }
+  .desc { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; }
+
+  .section-tag {
+    grid-column: 1 / -1;
+    color: var(--primary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+  }
 </style>
 </head>
 <body>
-  <h1>Hudl Analytics Suite</h1>
+  <h1>Support Admin Suite</h1>
   
   <div class="grid">
-    <a href="analytics.html" class="card">
-      <span class="icon">📡</span>
-      <span class="title">Livestream Analytics</span>
-      <span class="desc">Analyze viewership trends, unique plays, and device breakdowns for Hudl TV broadcasts.</span>
+    <div class="section-tag">Diagnostics & Performance</div>
+
+    <a href="pt_log_analyzer.html" class="card">
+      <span class="icon">🛠️</span>
+      <span class="title">PT Log Analyzer</span>
+      <span class="desc">Instant diagnostics for Production Truck logs. Identifies hardware bottlenecks and encoder failures.</span>
     </a>
 
-    <a href="ppv.html" class="card">
-      <span class="icon">💰</span>
-      <span class="title">PPV Revenue</span>
-      <span class="desc">Track sales, net revenue, and purchase trends for Pay-Per-View events.</span>
-    </a>
-
+    <div class="section-tag">Broadcast Monitoring & Ops</div>
+    
     <a href="monitor.html" class="card">
       <span class="icon">📺</span>
       <span class="title">Multi-View Monitor</span>
-      <span class="desc">Watch up to 4 livestreams simultaneously. Manually input Broadcast IDs or URLs.</span>
+      <span class="desc">Watch up to 4 livestreams simultaneously with detailed viewport controls.</span>
     </a>
 
     <a href="broadcast_grid.html" class="card">
       <span class="icon">📋</span>
       <span class="title">Broadcast Grid</span>
-      <span class="desc">Searchable data table of all broadcast records, plans, contacts, and stream status.</span>
+      <span class="desc">Quick-search your entire broadcast schedule. Filter by Site, ID, or Status.</span>
+    </a>
+
+    <div class="section-tag">Insights & Revenue</div>
+
+    <a href="analytics.html" class="card">
+      <span class="icon">📡</span>
+      <span class="title">Livestream Analytics</span>
+      <span class="desc">High-level viewership trends, unique plays, and device breakdown reports.</span>
+    </a>
+
+    <a href="ppv.html" class="card">
+      <span class="icon">💰</span>
+      <span class="title">PPV Revenue</span>
+      <span class="desc">Analyze ticket sales and net revenue for Pay-Per-View events.</span>
     </a>
   </div>
-
 </body>
 </html>
