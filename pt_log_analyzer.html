@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PT Log Analyzer</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --primary: #f97316;
+            --danger: #ef4444; --warning: #f59e0b; --success: #10b981; --border: #334155;
+        }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+        
+        .upload-zone { border: 2px dashed var(--border); padding: 50px; text-align: center; border-radius: 12px; background: var(--card); cursor: pointer; transition: 0.2s; }
+        .upload-zone:hover { border-color: var(--primary); background: rgba(249, 115, 22, 0.05); }
+
+        .report-section { background: var(--card); border-radius: 8px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
+        h2 { margin-top: 0; font-size: 1rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 15px; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .spec-item { margin-bottom: 10px; font-size: 0.9rem; border-bottom: 1px solid #2d3748; padding-bottom: 5px; }
+        .spec-label { color: #94a3b8; font-weight: bold; width: 140px; display: inline-block; }
+
+        .issue-card { padding: 15px; border-radius: 6px; margin-bottom: 12px; border-left: 4px solid #ccc; background: #0f172a; }
+        .issue-CRITICAL { border-left-color: var(--danger); }
+        .issue-WARNING { border-left-color: var(--warning); }
+        
+        .tag { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 900; text-transform: uppercase; margin-right: 10px; }
+        .tag-crit { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .tag-warn { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+
+        .next-steps { list-style: none; padding: 0; }
+        .next-steps li { background: rgba(16, 185, 129, 0.1); border-left: 3px solid var(--success); padding: 10px 15px; margin-bottom: 10px; font-size: 0.9rem; border-radius: 0 4px 4px 0; }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1 style="font-size: 1.4rem; margin:0;">PT <span style="color:var(--primary)">Log Analyzer</span></h1>
+        <a href="index.html" style="color:#94a3b8; text-decoration:none; font-size:0.8rem;">← Exit to Menu</a>
+    </div>
+
+    <div id="upload-container" class="upload-zone">
+        <input type="file" id="log-input" hidden>
+        <div style="font-size: 3rem; margin-bottom: 15px;">🔍</div>
+        <strong>Drag & Drop Production Truck Log</strong>
+        <p style="color:#94a3b8; font-size: 0.85rem; margin-top: 10px;">Select the .log file from the user's logs folder</p>
+    </div>
+
+    <div id="report-container" class="hidden">
+        <div style="margin-bottom: 20px;">
+            <button onclick="location.reload()" style="background:var(--primary); border:none; color:white; padding:8px 20px; border-radius:4px; font-weight:bold; cursor:pointer;">Analyze New Log</button>
+        </div>
+
+        <div class="grid">
+            <div class="report-section">
+                <h2>Mac System Specs</h2>
+                <div id="specs-output"></div>
+            </div>
+
+            <div class="report-section">
+                <h2>Production Health</h2>
+                <div id="health-summary" style="font-size: 1.2rem; font-weight: bold;"></div>
+                <p id="health-desc" style="color:#94a3b8; font-size: 0.85rem;"></p>
+            </div>
+        </div>
+
+        <div class="report-section">
+            <h2>Diagnostic Findings</h2>
+            <div id="issues-list"></div>
+        </div>
+
+        <div class="report-section">
+            <h2 style="color:var(--success)">Recommended Support Action Plan</h2>
+            <ul id="steps-list" class="next-steps"></ul>
+        </div>
+    </div>
+</div>
+
+<script>
+    const logInput = document.getElementById('log-input');
+    const uploadZone = document.getElementById('upload-container');
+
+    uploadZone.onclick = () => logInput.click();
+    logInput.onchange = (e) => handleFile(e.target.files[0]);
+
+    function handleFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => processLog(e.target.result);
+        reader.readAsText(file);
+    }
+
+    function processLog(text) {
+        document.getElementById('upload-container').classList.add('hidden');
+        document.getElementById('report-container').classList.remove('hidden');
+
+        // --- 1. SYSTEM SPECS ---
+        const specs = {
+            model: text.match(/Model number\s+\[(.*?)\]/)?.[1] || "Unknown Mac Model",
+            os: text.match(/Operating System:\s+\[(.*?)\]/)?.[1] || "Unknown OS",
+            ram: text.match(/Physical Memory:\s+\[(.*?)\]/)?.[1] || "Unknown RAM",
+            cores: text.match(/CPU Cores:\s+\[(.*?)\]/)?.[1] || "Unknown Cores",
+            version: text.match(/Production Truck - ([\d.]+)/)?.[1] || "Unknown Version"
+        };
+
+        document.getElementById('specs-output').innerHTML = `
+            <div class="spec-item"><span class="spec-label">PT Version:</span> ${specs.version}</div>
+            <div class="spec-item"><span class="spec-label">Hardware:</span> ${specs.model}</div>
+            <div class="spec-item"><span class="spec-label">Memory:</span> ${specs.ram}</div>
+            <div class="spec-item"><span class="spec-label">Cores:</span> ${specs.cores}</div>
+            <div class="spec-item"><span class="spec-label">OS Version:</span> ${specs.os}</div>
+        `;
+
+        // --- 2. ISSUE DETECTION ---
+        const issues = [];
+        const steps = new Set();
+
+        // Check for specific error patterns
+        if (text.includes("Slow video capture rate")) {
+            issues.push({ level: 'CRITICAL', title: 'Hardware Capture Failure', desc: 'The capture device (card/camera) is providing video slower than the required frame rate. This usually indicates a bad cable or USB 2.0 port usage.' });
+            steps.add("Advise user to move the capture card to a different USB port (must be USB 3.0/Blue).");
+            steps.add("Ask the user to swap the HDMI or USB cable connecting their camera.");
+        }
+
+        if (text.includes("Deleting out of date sample")) {
+            issues.push({ level: 'WARNING', title: 'Dropped Frames (Buffer Overflow)', desc: 'The computer is failing to process video samples in time. This causes stuttering in the recorded and streamed video.' });
+            steps.add("Check if the user has Chrome or other heavy apps open. Close everything except Production Truck.");
+            steps.add("Lower the 'Broadcast Resolution' in the Preferences > Streaming menu.");
+        }
+
+        if (text.includes("Video frame behind")) {
+            issues.push({ level: 'CRITICAL', title: 'System Resource Overload', desc: 'The CPU/GPU is overloaded and cannot keep up with the encoding process. Viewers will see significant lag.' });
+            steps.add("Go to Preferences > Streaming and ensure 'Apple H.264 (Hardware)' is selected as the encoder.");
+            steps.add("Lower the Frame Rate from 60fps to 30fps if applicable.");
+        }
+
+        if (text.includes("MTStreamingStatusError")) {
+            issues.push({ level: 'CRITICAL', title: 'Network Disconnection', desc: 'The stream was force-closed due to a network interruption or invalid RTMP credentials.' });
+            steps.add("Confirm the user is on a Wired (Ethernet) connection. Wi-Fi is not supported for stable streaming.");
+            steps.add("Have the user run a speed test and check their 'Upload' speed specifically (need 10Mbps+).");
+        }
+
+        // --- 3. RENDER RESULTS ---
+        const issuesList = document.getElementById('issues-list');
+        if (issues.length === 0) {
+            issuesList.innerHTML = `<div style="color:var(--success); font-weight:bold;">✅ No performance or connection errors found in this log.</div>`;
+        } else {
+            issuesList.innerHTML = issues.map(iss => `
+                <div class="issue-card issue-${iss.level}">
+                    <span class="tag ${iss.level === 'CRITICAL' ? 'tag-crit' : 'tag-warn'}">${iss.level}</span>
+                    <strong>${iss.title}</strong>
+                    <div style="font-size:0.85rem; color:#94a3b8; margin-top:5px;">${iss.desc}</div>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('steps-list').innerHTML = steps.size > 0 
+            ? Array.from(steps).map(s => `<li>${s}</li>`).join('')
+            : `<li>No specific failures detected. Recommend checking the camera hardware and local network stability.</li>`;
+
+        // --- 4. HEALTH SCORE ---
+        const healthEl = document.getElementById('health-summary');
+        const descEl = document.getElementById('health-desc');
+        const critCount = issues.filter(i => i.level === 'CRITICAL').length;
+
+        if (critCount > 0) {
+            healthEl.innerHTML = `<span style="color:var(--danger)">CRITICAL FAILURES</span>`;
+            descEl.innerText = "This machine is currently failing to produce a stable broadcast. Hardware or settings changes are required.";
+        } else if (issues.length > 0) {
+            healthEl.innerHTML = `<span style="color:var(--warning)">PERFORMANCE WARNING</span>`;
+            descEl.innerText = "The machine is struggling. It may stay live, but viewers will likely experience stuttering or audio sync issues.";
+        } else {
+            healthEl.innerHTML = `<span style="color:var(--success)">SYSTEM HEALTHY</span>`;
+            descEl.innerText = "No internal software or hardware bottlenecks were identified in this log.";
+        }
+    }
+</script>
+</body>
+</html>
