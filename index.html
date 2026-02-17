@@ -49,6 +49,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    height: 100%;
   }
   
   .card:hover { 
@@ -68,24 +69,18 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    margin-top: 1rem;
+    margin-top: 2rem;
     border-bottom: 1px solid var(--border);
     padding-bottom: 0.5rem;
   }
+  .section-tag:first-child { margin-top: 0; }
 </style>
 </head>
 <body>
   <h1>Support Admin Suite</h1>
   
   <div class="grid">
-    <div class="section-tag">Diagnostics & Performance</div>
-
-    <a href="pt_log_analyzer.html" class="card">
-      <span class="icon">🛠️</span>
-      <span class="title">PT Log Analyzer</span>
-      <span class="desc">Instant diagnostics for Production Truck logs. Identifies hardware bottlenecks and encoder failures.</span>
-    </a>
-
+    
     <div class="section-tag">Broadcast Monitoring & Ops</div>
     
     <a href="monitor.html" class="card">
@@ -97,7 +92,21 @@
     <a href="broadcast_grid.html" class="card">
       <span class="icon">📋</span>
       <span class="title">Broadcast Grid</span>
-      <span class="desc">Quick-search your entire broadcast schedule. Filter by Site, ID, or Status.</span>
+      <span class="desc">Quick-search the entire broadcast schedule. Filter by Site, ID, or Status.</span>
+    </a>
+
+    <a href="access_passes.html" class="card">
+      <span class="icon">🎫</span>
+      <span class="title">Access Pass Wizard</span>
+      <span class="desc">Step-by-step tool for building Single Game, Season, or Annual passes without errors.</span>
+    </a>
+
+    <div class="section-tag">Diagnostics & Performance</div>
+
+    <a href="pt_log_analyzer.html" class="card">
+      <span class="icon">🛠️</span>
+      <span class="title">PT Log Analyzer</span>
+      <span class="desc">Instant diagnostics for Production Truck logs. Identifies hardware and network issues.</span>
     </a>
 
     <div class="section-tag">Insights & Revenue</div>
@@ -113,6 +122,8 @@
       <span class="title">PPV Revenue</span>
       <span class="desc">Analyze ticket sales and net revenue for Pay-Per-View events.</span>
     </a>
+
   </div>
+
 </body>
 </html>
