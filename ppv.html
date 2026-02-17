@@ -12,13 +12,13 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
 <style>
-  :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --green: #10b981; --border: #334155; }
+  :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; --green: #10b981; --border: #334155; --blue: #3b82f6; }
   * { box-sizing: border-box; }
   body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem; }
   .container { max-width: 1400px; margin: 0 auto; }
   .header { display: flex; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
   .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; }
-  .upload-box { border: 2px dashed var(--border); padding: 5rem; text-align: center; border-radius: 1rem; cursor: pointer; background: var(--card); margin-top: 10vh; }
+  .upload-box { border: 2px dashed var(--border); padding: 5rem; text-align: center; border-radius: 1rem; cursor: pointer; background: var(--card); margin-top: 2rem; }
   .upload-box:hover { border-color: var(--green); background: rgba(16, 185, 129, 0.05); }
   .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
@@ -28,6 +28,12 @@
   @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
   .back-link { text-decoration: none; color: var(--muted); font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
   .back-link:hover { color: #fff; }
+  
+  /* Help Tooltip Styling */
+  .help-box { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); padding: 1rem; border-radius: 0.5rem; margin-top: 1rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+  .help-box i { font-style: normal; font-size: 1.25rem; }
+  .help-link { color: var(--blue); text-decoration: none; font-size: 0.8rem; font-weight: 500; }
+  .help-link:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -50,7 +56,7 @@
         dynamicTyping: true,
         complete: (results) => {
           const processed = results.data
-            .filter(r => r['Date Captured'] && r['Status'] === 'Captured') // Only successful sales
+            .filter(r => r['Date Captured'] && r['Status'] === 'Captured')
             .map(row => ({
               date: new Date(row['Date Captured']),
               net: row['NET'] || 0,
@@ -58,7 +64,7 @@
               fees: (row['Service Fee'] || 0) + (row['Sales Tax'] || 0),
               sport: row['Section'] || 'Other',
               site: row['Site'] || 'Unknown',
-              desc: row['Description']
+              desc: row['Description'] || 'No Description'
             }))
             .sort((a, b) => a.date - b.date);
           setData(processed);
@@ -67,14 +73,10 @@
     };
 
     const stats = useMemo(() => {
-      if (!data) return null;
-      
-      // Totals
+      if (!data || data.length === 0) return null;
       const totalNet = data.reduce((acc, r) => acc + r.net, 0);
       const totalGross = data.reduce((acc, r) => acc + r.gross, 0);
       const totalOrders = data.length;
-      
-      // Timeline (Group by Day)
       const timelineMap = {};
       data.forEach(d => {
         const day = d.date.toLocaleDateString();
@@ -83,22 +85,30 @@
         timelineMap[day].gross += d.gross;
       });
       const timeline = Object.values(timelineMap).sort((a,b) => a.time - b.time);
-
-      // Top Sports by Revenue
       const sportMap = {};
       data.forEach(d => {
         if(!sportMap[d.sport]) sportMap[d.sport] = { name: d.sport, value: 0 };
         sportMap[d.sport].value += d.net;
       });
       const topSports = Object.values(sportMap).sort((a,b) => b.value - a.value).slice(0, 5);
-
       return { totalNet, totalGross, totalOrders, timeline, topSports };
     }, [data]);
 
     if (!data) {
       return (
-        <div className="container">
+        <div className="container" style={{marginTop: '5vh'}}>
           <a href="index.html" className="back-link">← Back to Menu</a>
+          
+          <div className="help-box">
+            <i>ℹ️</i>
+            <div>
+              <div style={{fontSize: '0.9rem', fontWeight: 600, color: '#bfdbfe'}}>Need help exporting your data?</div>
+              <a href="https://support.hudl.com/s/article/viewing-purchase-history-hudl-tv?language=en_US#hudltvaccesspasses:~:text=WIMU-,Preferred%20Language,Access%20Passes,-Log%20in%20to" target="_blank" className="help-link">
+                Read the Hudl Support Article →
+              </a>
+            </div>
+          </div>
+
           <label className="upload-box" style={{display:'block'}}>
             <input type="file" accept=".csv" hidden onChange={handleFileUpload} />
             <div style={{fontSize:'3rem', marginBottom:'1rem'}}>💰</div>
@@ -198,7 +208,6 @@
             </table>
           </div>
         </div>
-
       </div>
     );
   };
