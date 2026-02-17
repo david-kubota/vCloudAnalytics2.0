@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Purchase Management & Refunds</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+  .card { background-color: #1e293b; border: 1px solid #334155; }
+  input { background: #0f172a; border: 1px solid #334155; color: white; }
+  tr:hover { background-color: rgba(255,255,255,0.02); }
+</style>
+</head>
+<body class="p-8">
+
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-8 pb-4 border-b border-slate-700">
+        <div>
+            <h1 class="text-2xl font-bold">Purchase History & <span class="text-orange-500">Refunds</span></h1>
+            <p class="text-slate-400 text-sm">Manage fan transactions and issue self-service refunds.</p>
+        </div>
+        <a href="index.html" class="text-sm text-slate-400 hover:text-white transition">← Back to Menu</a>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6 mb-8">
+        <div class="card p-6 rounded-xl">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Sales</div>
+            <div class="text-3xl font-bold">$1,420.50</div>
+        </div>
+        <div class="card p-6 rounded-xl">
+            <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Active Fans</div>
+            <div class="text-3xl font-bold">141</div>
+        </div>
+        <div class="card p-6 rounded-xl border-orange-500/30">
+            <div class="text-orange-500 text-xs font-bold uppercase tracking-wider mb-1">Refunds Processed</div>
+            <div class="text-3xl font-bold">12</div>
+        </div>
+    </div>
+
+    <div class="card p-4 rounded-t-xl border-b-0 flex gap-4">
+        <input type="text" id="searchInput" placeholder="Search by Name, Email, or Order #..." class="flex-1 p-2 rounded focus:outline-none focus:border-orange-500 transition">
+        <select class="bg-slate-800 border border-slate-700 text-sm rounded px-4">
+            <option>All Sections</option>
+            <option>Boys Basketball</option>
+            <option>Girls Basketball</option>
+        </select>
+    </div>
+
+    <div class="card rounded-b-xl overflow-hidden">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-800/50 text-slate-400 uppercase text-[10px] font-bold">
+                <tr>
+                    <th class="p-4">Date</th>
+                    <th class="p-4">Fan Name</th>
+                    <th class="p-4">Email</th>
+                    <th class="p-4">Access Pass</th>
+                    <th class="p-4">Amount</th>
+                    <th class="p-4">Status</th>
+                    <th class="p-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="purchaseTable">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Mock Data based on your CSV structure
+    const purchases = [
+        { id: "81361585021", date: "12/12/2025", name: "Karissa Rittenbach", email: "karissa.rittenbach@yahoo.com", pass: "Boys Varsity Basketball", price: 10.60, status: "Captured" },
+        { id: "81361799936", date: "12/12/2025", name: "David Williamson", email: "dewilliamson2012@gmail.com", pass: "Boys Varsity Basketball", price: 10.60, status: "Captured" },
+        { id: "81361955329", date: "12/12/2025", name: "Larry Schell", email: "schell53@hotmail.com", pass: "Boys Varsity Basketball", price: 10.60, status: "Captured" },
+        { id: "81362042503", date: "12/12/2025", name: "Faith Hahn", email: "fahahn@westriv.com", pass: "Boys Varsity Basketball", price: 10.60, status: "Captured" },
+        { id: "81362052589", date: "12/13/2025", name: "Kim Kjelshus", email: "kimkkjelshus@gmail.com", pass: "Girls Varsity Basketball", price: 14.49, status: "Refunded" },
+        { id: "81451525403", date: "02/08/2026", name: "Andrew Knudson", email: "jkpednurse7@gmail.com", pass: "Girls Varsity Basketball", price: 10.60, status: "Captured" }
+    ];
+
+    function renderTable(filter = "") {
+        const tbody = document.getElementById('purchaseTable');
+        tbody.innerHTML = '';
+
+        purchases.filter(p => 
+            p.name.toLowerCase().includes(filter.toLowerCase()) || 
+            p.email.toLowerCase().includes(filter.toLowerCase())
+        ).forEach((p, index) => {
+            const isRefunded = p.status === "Refunded";
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="p-4 text-slate-400">${p.date}</td>
+                <td class="p-4 font-bold">${p.name}</td>
+                <td class="p-4 text-slate-400 text-xs">${p.email}</td>
+                <td class="p-4 text-xs">${p.pass}</td>
+                <td class="p-4 font-mono">$${p.price.toFixed(2)}</td>
+                <td class="p-4">
+                    <span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${isRefunded ? 'bg-red-900/30 text-red-400 border border-red-900' : 'bg-green-900/30 text-green-400 border border-green-900'}">
+                        ${p.status}
+                    </span>
+                </td>
+                <td class="p-4 text-right">
+                    ${isRefunded ? 
+                        '<span class="text-slate-600 text-xs italic">No actions</span>' : 
+                        `<button onclick="processRefund('${p.id}')" class="bg-red-500 hover:bg-red-600 text-white text-[10px] font-bold px-3 py-1.5 rounded transition uppercase">Refund</button>`
+                    }
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function processRefund(id) {
+        if(confirm(`Are you sure you want to refund Transaction ID: ${id}?\n\nThis action will immediately revoke the fan's access and return funds.`)) {
+            const index = purchases.findIndex(p => p.id === id);
+            if (index !== -1) {
+                purchases[index].status = "Refunded";
+                renderTable(document.getElementById('searchInput').value);
+            }
+        }
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        renderTable(e.target.value);
+    });
+
+    renderTable();
+</script>
+</body>
+</html>
