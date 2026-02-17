@@ -37,14 +37,29 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    margin: 3rem 0 1.5rem 0;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border);
+    margin: 3rem 0 0.5rem 0;
     display: flex;
     align-items: center;
     gap: 10px;
   }
   .section-header:first-of-type { margin-top: 0; }
+
+  .section-desc {
+    color: #94a3b8;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.75rem;
+  }
+
+  .disclaimer-note {
+    color: #ef4444;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-style: italic;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+  }
 
   .grid { 
     display: grid; 
@@ -79,7 +94,7 @@
   .icon { font-size: 3rem; margin-bottom: 1rem; display: block; filter: drop-shadow(0 0 8px rgba(0,0,0,0.3)); }
   .title { font-size: 1.15rem; font-weight: 700; display: block; margin-bottom: 0.5rem; }
   .desc { color: #94a3b8; font-size: 0.85rem; line-height: 1.5; }
-  .support-solve { color: #f97316; font-weight: 600; margin-top: 0.75rem; font-size: 0.8rem; border-top: 1px solid #334155; pt-2; width: 100%; padding-top: 10px; }
+  .support-solve { color: #f97316; font-weight: 600; margin-top: 0.75rem; font-size: 0.8rem; border-top: 1px solid #334155; width: 100%; padding-top: 10px; }
 
   @media (max-width: 640px) {
     body { padding: 1.5rem; }
@@ -93,6 +108,7 @@
     <h1>Hudl Support Suite</h1>
 
     <div class="section-header">🔥 Top 5 Support Interaction Drivers</div>
+    <p class="section-desc">These are demos with dummy data that solve issues around workflows that are currently difficult for users due to vCloud UI/UX.</p>
     <div class="grid">
       <a href="broadcast_grid_2.html" class="card">
         <span class="icon">⚡</span>
@@ -124,6 +140,7 @@
     </div>
 
     <div class="section-header">📊 Insights</div>
+    <p class="section-desc">Download Reports from vCloud and upload them to get visuals around the data.</p>
     <div class="grid">
       <a href="analytics.html" class="card">
         <span class="icon">📡</span>
@@ -139,6 +156,8 @@
     </div>
 
     <div class="section-header">🛠️ Support Tools</div>
+    <p class="section-desc">These are proof-of-concept Support tools that we could add to vCloud or some other tools.</p>
+    <p class="disclaimer-note">Note: these should not be used for actual customer interactions.</p>
     <div class="grid">
       <a href="monitor.html" class="card">
         <span class="icon">📺</span>
