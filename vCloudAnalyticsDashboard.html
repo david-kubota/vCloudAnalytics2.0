@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hudl TV Analytics v2.2</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+<script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8;
+    --primary: #f97316; --secondary: #3b82f6; --success: #10b981; --border: #334155;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem; min-height: 100vh; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  
+  /* Components */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 0.75rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+  .kpi-val { font-size: 2rem; font-weight: 700; color: #fff; margin-top: 0.5rem; }
+  .kpi-sub { font-size: 0.85rem; color: var(--muted); margin-top: 0.25rem; }
+  
+  /* Inputs */
+  .controls { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; background: var(--card); padding: 1rem; border-radius: 0.75rem; border: 1px solid var(--border); }
+  .input-group { display: flex; flex-direction: column; gap: 0.25rem; flex: 1; min-width: 150px; }
+  .label { font-size: 0.75rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  select, input { background: #0f172a; border: 1px solid var(--border); color: white; padding: 0.6rem; border-radius: 0.375rem; font-size: 0.9rem; }
+  select:focus, input:focus { outline: 2px solid var(--primary); border-color: var(--primary); }
+
+  /* Upload Screen */
+  .upload-container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh; width: 100%; }
+  .upload-box { 
+    border: 2px dashed var(--border); 
+    padding: 4rem; 
+    text-align: center; 
+    border-radius: 1rem; 
+    cursor: pointer; 
+    background: var(--card); 
+    transition: 0.2s; 
+    max-width: 500px; 
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  .upload-box:hover { border-color: var(--primary); background: rgba(249, 115, 22, 0.05); }
+  .help-link { color: var(--secondary); text-decoration: none; font-size: 0.9rem; margin-top: 0.5rem; display: inline-block; }
+  .help-link:hover { text-decoration: underline; }
+
+  /* Grid */
+  .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  
+  /* Table */
+  .table-wrap { overflow-x: auto; max-height: 500px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th { text-align: left; padding: 1rem; border-bottom: 1px solid var(--border); color: var(--muted); position: sticky; top: 0; background: var(--card); z-index: 10; }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; max-width: 300px; overflow: hidden; text-overflow: ellipsis; }
+  tr:hover { background: rgba(255,255,255,0.02); }
+
+  @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useMemo } = React;
+  const { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = Recharts;
+
+  const COLORS = ['#f97316', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#14b8a6'];
+  const formatNum = (n) => n ? n.toLocaleString() : '0';
+  
+  const App = () => {
+    const [rawData, setRawData] = useState(null);
+    const [fileName, setFileName] = useState("");
+    
+    // Filters
+    const [sportFilter, setSportFilter] = useState('All');
+    const [siteFilter, setSiteFilter] = useState('All');
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
+
+    // --- UPLOAD & PARSE ---
+    const handleFileUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      setFileName(file.name);
+      
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: true,
+        complete: (results) => {
+          const processed = results.data
+            .filter(r => r['Broadcast Date'])
+            .map(row => ({
+              // Core Data
+              id: row['Broadcast ID'],
+              title: row['Broadcast Title'],
+              date: new Date(row['Broadcast Date']),
+              
+              // Filtering Fields
+              sport: row['Broadcast Section Title'] || 'Other',
+              site: row['Site Title'] || 'Unknown',
+
+              // Metrics (Unique Plays = Source of Truth)
+              uniquePlays: row['Unique Plays (via players)'] || 0,
+              uniqueLive: row['Unique Plays (live; via players)'] || 0,
+              
+              // Quality & Engagement
+              totalTime: row['Total Viewer Time (seconds)'] || 0,
+              
+              // Raw totals for Platform breakdown
+              rawWeb: row['Total Web Viewers'] || 0,
+              rawMobile: (row['Total iOS Viewers'] || 0) + (row['Total Android Viewers'] || 0),
+              rawRoku: row['Total Roku Viewers'] || 0,
+              rawFireTV: row['Total AFTV Viewers'] || 0,
+              rawAppleTV: row['Total tvOS Viewers'] || 0,
+              rawAndroidTV: row['Total Android TV Viewers'] || 0
+            }))
+            .sort((a, b) => a.date - b.date);
+
+          if(processed.length > 0) {
+            setRawData(processed);
+            setDateRange({
+              start: processed[0].date.toISOString().split('T')[0],
+              end: processed[processed.length-1].date.toISOString().split('T')[0]
+            });
+          }
+        }
+      });
+    };
+
+    // --- FILTER LOGIC ---
+    const { filteredData, filterOptions } = useMemo(() => {
+      if (!rawData) return { filteredData: [], filterOptions: { sports: [], sites: [] } };
+
+      const sports = [...new Set(rawData.map(d => d.sport))].sort();
+      const sites = [...new Set(rawData.map(d => d.site))].sort();
+
+      const start = new Date(dateRange.start);
+      const end = new Date(dateRange.end);
+      end.setHours(23, 59, 59, 999);
+
+      const filtered = rawData.filter(d => {
+        const matchSport = sportFilter === 'All' || d.sport === sportFilter;
+        const matchSite = siteFilter === 'All' || d.site === siteFilter;
+        const matchTime = d.date >= start && d.date <= end;
+        return matchSport && matchSite && matchTime;
+      });
+
+      return { filteredData: filtered, filterOptions: { sports, sites } };
+    }, [rawData, sportFilter, siteFilter, dateRange]);
+
+
+    // --- AGGREGATIONS ---
+    const stats = useMemo(() => {
+      if (filteredData.length === 0) return null;
+
+      const totalUnique = filteredData.reduce((acc, r) => acc + r.uniquePlays, 0);
+      const totalLive = filteredData.reduce((acc, r) => acc + r.uniqueLive, 0);
+      const totalTime = filteredData.reduce((acc, r) => acc + r.totalTime, 0);
+      const avgWatchMin = totalUnique > 0 ? (totalTime / totalUnique / 60) : 0;
+
+      // Charts: Timeline
+      const timelineMap = {};
+      filteredData.forEach(d => {
+        const day = d.date.toLocaleDateString();
+        if(!timelineMap[day]) timelineMap[day] = { date: day, time: d.date.getTime(), plays: 0, live: 0 };
+        timelineMap[day].plays += d.uniquePlays;
+        timelineMap[day].live += d.uniqueLive;
+      });
+      const timeline = Object.values(timelineMap).sort((a,b) => a.time - b.time);
+
+      // Charts: Top Sites
+      const siteMap = {};
+      filteredData.forEach(d => {
+        if(!siteMap[d.site]) siteMap[d.site] = { name: d.site, value: 0 };
+        siteMap[d.site].value += d.uniquePlays;
+      });
+      const topSites = Object.values(siteMap).sort((a,b) => b.value - a.value).slice(0, 10);
+      
+      // Charts: Top Sports (New!)
+      const sportMap = {};
+      filteredData.forEach(d => {
+        if(!sportMap[d.sport]) sportMap[d.sport] = { name: d.sport, value: 0 };
+        sportMap[d.sport].value += d.uniquePlays;
+      });
+      const topSports = Object.values(sportMap).sort((a,b) => b.value - a.value).slice(0, 10);
+
+      // Charts: Detailed Platform Split
+      const rawTotal = filteredData.reduce((acc, r) => 
+        acc + r.rawWeb + r.rawMobile + r.rawRoku + r.rawFireTV + r.rawAppleTV + r.rawAndroidTV, 0);
+      
+      const getVal = (key) => {
+        const rawCount = filteredData.reduce((acc, r) => acc + r[key], 0);
+        return rawTotal > 0 ? Math.round(totalUnique * (rawCount / rawTotal)) : 0;
+      };
+
+      const platforms = [
+        { name: 'Web', value: getVal('rawWeb') },
+        { name: 'Mobile', value: getVal('rawMobile') },
+        { name: 'Roku', value: getVal('rawRoku') },
+        { name: 'Fire TV', value: getVal('rawFireTV') },
+        { name: 'Apple TV', value: getVal('rawAppleTV') },
+        { name: 'Android TV', value: getVal('rawAndroidTV') }
+      ].filter(d => d.value > 0).sort((a,b) => b.value - a.value);
+
+      return { totalUnique, totalLive, avgWatchMin, timeline, topSites, topSports, platforms };
+    }, [filteredData]);
+
+
+    // --- RENDER ---
+    if (!rawData) {
+      return (
+        <div className="upload-container">
+          <label className="upload-box">
+            <input type="file" accept=".csv" hidden onChange={handleFileUpload} />
+            <div style={{fontSize:'3rem', marginBottom:'1rem'}}>📡</div>
+            <h2>Upload Livestream CSV</h2>
+            <div style={{color:'var(--muted)', marginBottom: '1rem'}}>Drag & drop to analyze viewing trends</div>
+          </label>
+          
+          <div style={{marginTop: '2rem', textAlign: 'center'}}>
+            <p style={{color: 'var(--muted)', marginBottom: '0.5rem'}}>Need help exporting your data?</p>
+            <a 
+              href="https://support.hudl.com/s/article/view-your-broadcast-analytics-hudl-tv?language=en_US#hudltvanalyticsmultiplebroadcasts:~:text=Select%20Export%20to%20CSV%20to%20download%20a%20copy%20of%20these%20stats." 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="help-link"
+            >
+              Read the Hudl Support Article →
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="container">
+        <div className="header" style={{display:'flex', justifyContent:'space-between', marginBottom:'2rem', borderBottom:'1px solid var(--border)', paddingBottom:'1rem'}}>
+          <h1 style={{fontSize:'1.5rem', fontWeight:'bold'}}>Hudl TV Analytics <span style={{fontSize:'0.9rem', color:'var(--primary)', background:'rgba(249,115,22,0.1)', padding:'0.2rem 0.5rem', borderRadius:'4px', marginLeft:'1rem'}}>v2.2</span></h1>
+          <button onClick={() => setRawData(null)} style={{background:'transparent', border:'1px solid var(--muted)', color:'var(--text)', padding:'0.5rem 1rem', borderRadius:'4px', cursor:'pointer'}}>Upload New</button>
+        </div>
+
+        {/* CONTROLS */}
+        <div className="controls">
+          <div className="input-group">
+            <label className="label">Sport / Section</label>
+            <select value={sportFilter} onChange={e => setSportFilter(e.target.value)}>
+              <option value="All">All Sports</option>
+              {filterOptions.sports.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="input-group">
+            <label className="label">Site</label>
+            <select value={siteFilter} onChange={e => setSiteFilter(e.target.value)}>
+              <option value="All">All Sites</option>
+              {filterOptions.sites.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div className="input-group">
+            <label className="label">Start Date</label>
+            <input type="date" value={dateRange.start} onChange={e => setDateRange({...dateRange, start: e.target.value})} />
+          </div>
+          <div className="input-group">
+            <label className="label">End Date</label>
+            <input type="date" value={dateRange.end} onChange={e => setDateRange({...dateRange, end: e.target.value})} />
+          </div>
+        </div>
+
+        {stats && (
+          <>
+            {/* KPIS */}
+            <div className="grid-4">
+              <div className="card">
+                <div className="label">Unique Plays</div>
+                <div className="kpi-val">{formatNum(stats.totalUnique)}</div>
+                <div className="kpi-sub">Total unique viewers</div>
+              </div>
+              <div className="card">
+                <div className="label">Live Plays</div>
+                <div className="kpi-val" style={{color: 'var(--success)'}}>{formatNum(stats.totalLive)}</div>
+                <div className="kpi-sub">{((stats.totalLive / stats.totalUnique)*100).toFixed(1)}% of total</div>
+              </div>
+              <div className="card">
+                <div className="label">Avg Watch Time</div>
+                <div className="kpi-val" style={{color: 'var(--secondary)'}}>{stats.avgWatchMin.toFixed(1)}m</div>
+                <div className="kpi-sub">Per unique viewer</div>
+              </div>
+              <div className="card">
+                <div className="label">Broadcasts</div>
+                <div className="kpi-val">{filteredData.length}</div>
+                <div className="kpi-sub">Events in range</div>
+              </div>
+            </div>
+
+            {/* CHARTS ROW 1 */}
+            <div className="grid-2">
+              <div className="card">
+                <h3>Unique Viewers Over Time</h3>
+                <div style={{height: 300}}>
+                  <ResponsiveContainer>
+                    <AreaChart data={stats.timeline}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                      <XAxis dataKey="date" stroke="#94a3b8" minTickGap={30} />
+                      <YAxis stroke="#94a3b8" />
+                      <Tooltip contentStyle={{background:'#1e293b', borderColor:'#334155', color:'#fff'}} />
+                      <Legend />
+                      <Area type="monotone" dataKey="plays" name="Total Unique" stroke="#f97316" fill="rgba(249,115,22,0.2)" />
+                      <Area type="monotone" dataKey="live" name="Live Unique" stroke="#10b981" fill="rgba(16,185,129,0.2)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div className="card">
+                <h3>Top 10 Sites by Traffic</h3>
+                <div style={{height: 300}}>
+                  <ResponsiveContainer>
+                    <BarChart data={stats.topSites} layout="vertical" margin={{left: 20}}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                      <XAxis type="number" stroke="#94a3b8" />
+                      <YAxis type="category" dataKey="name" stroke="#94a3b8" width={120} style={{fontSize: '0.8rem'}} />
+                      <Tooltip contentStyle={{background:'#1e293b', borderColor:'#334155', color:'#fff'}} />
+                      <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Unique Plays" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </div>
+
+            {/* CHARTS ROW 2 & TABLE */}
+            <div className="grid-2">
+              <div className="card">
+                <h3>Detailed Platform Breakdown</h3>
+                <div style={{height: 300}}>
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={stats.platforms} innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
+                        {stats.platforms.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip contentStyle={{background:'#1e293b', borderColor:'#334155', color:'#fff'}} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+              
+               <div className="card">
+                  <h3>Views by Sport (Top 10)</h3>
+                  <div style={{height: 300}}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.topSports} layout="vertical" margin={{left: 10, right: 30}}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={false} />
+                        <XAxis type="number" stroke="#94a3b8" hide />
+                        <YAxis type="category" dataKey="name" stroke="#94a3b8" width={100} style={{fontSize: '0.8rem'}} />
+                        <Tooltip contentStyle={{background:'#1e293b', borderColor:'#334155', color:'#fff'}} cursor={{fill: 'rgba(255,255,255,0.05)'}} />
+                        <Bar dataKey="value" fill="#f97316" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+              </div>
+            </div>
+
+            <div className="card">
+              <h3>Broadcast Details</h3>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Title</th>
+                      <th>Sport</th>
+                      <th>Site</th>
+                      <th style={{textAlign:'right'}}>Unique Plays</th>
+                      <th style={{textAlign:'right'}}>Avg Watch</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.slice(0, 100).map((row) => (
+                      <tr key={row.id}>
+                        <td>{row.date.toLocaleDateString()}</td>
+                        <td title={row.title}>{row.title.substring(0, 40)}{row.title.length>40?'...':''}</td>
+                        <td>{row.sport}</td>
+                        <td>{row.site}</td>
+                        <td style={{textAlign:'right', fontWeight:'bold', color:'#fff'}}>{row.uniquePlays.toLocaleString()}</td>
+                        <td style={{textAlign:'right'}}>{(row.totalTime / row.uniquePlays / 60 || 0).toFixed(1)}m</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredData.length > 100 && <div style={{textAlign:'center', padding:'1rem', color:'var(--muted)'}}>Showing top 100 of {filteredData.length} records</div>}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
