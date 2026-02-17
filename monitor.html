@@ -32,7 +32,7 @@
 
         /* Top Navigation Bar */
         .top-bar {
-            height: 50px;
+            height: 40px;
             background: #020617;
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -52,20 +52,48 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 10px;
-            padding: 10px;
-            height: calc(100vh - 50px);
+            gap: 8px;
+            padding: 8px;
+            /* Calculate height minus top bar */
+            height: calc(100vh - 40px);
+            min-height: 0; /* Crucial for grid overflow handling */
         }
 
         /* Viewport Card */
         .viewport {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative;
+        }
+
+        /* --- THE FIX: HARD SPLIT HEIGHTS --- */
+        .video-wrapper {
+            height: 55%; /* Always takes top 55% */
+            width: 100%;
+            background: #000;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .data-panel {
+            height: 45%; /* Always takes bottom 45% */
+            padding: 10px;
+            overflow-y: auto; /* Scroll ONLY the data if screen is tiny */
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #151e2e;
+        }
+
+        iframe {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border: none;
         }
 
         /* Empty State */
@@ -80,111 +108,86 @@
         .empty-input {
             background: var(--bg);
             border: 1px solid var(--border);
-            padding: 10px;
+            padding: 8px;
             border-radius: 4px;
             color: white;
-            width: 250px;
+            width: 200px;
             text-align: center;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 12px;
         }
         .load-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 1px;
         }
-        .load-btn:hover { background: #ea580c; }
 
-        /* Video Area */
-        .video-container {
-            width: 100%;
-            background: #000;
-            /* 16:9 Aspect Ratio logic */
-            aspect-ratio: 16/9; 
-            position: relative;
-            flex-shrink: 0;
-        }
-        iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        /* Data Panel (Below Video) */
-        .data-panel {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        /* Field Groups */
-        .row { display: flex; gap: 10px; }
-        .col { flex: 1; }
+        /* Data Fields Styling */
+        .row { display: flex; gap: 8px; }
+        .col { flex: 1; min-width: 0; }
 
         .label {
-            font-size: 10px;
+            font-size: 9px;
             text-transform: uppercase;
             color: var(--text-muted);
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
+            white-space: nowrap;
         }
-        .value {
-            font-size: 13px;
-            font-weight: 500;
-        }
-        .contact-info {
+        .value-text {
             font-size: 12px;
-            color: #cbd5e1;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sub-text {
+            font-size: 10px;
+            color: var(--text-muted);
         }
 
-        /* Controls */
+        .contact-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 6px 8px;
+        }
+
         select {
             width: 100%;
             background: var(--bg);
             border: 1px solid var(--border);
             color: white;
-            padding: 6px;
+            padding: 4px 6px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
+            height: 26px;
         }
-        select:focus { outline: 1px solid var(--primary); }
+        select:focus { outline: 1px solid var(--primary); border-color: var(--primary); }
 
         .close-btn {
             position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.6);
+            top: 5px; right: 5px;
+            background: rgba(0,0,0,0.7);
             color: white;
             border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
+            width: 20px; height: 20px;
+            border-radius: 3px;
             cursor: pointer;
             z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
+            font-size: 14px;
+            line-height: 1;
+            display: flex; align-items: center; justify-content: center;
         }
         .close-btn:hover { background: var(--danger); }
-
     </style>
 </head>
 <body>
@@ -194,11 +197,10 @@
         <a href="index.html" class="nav-link">Exit to Menu</a>
     </div>
 
-    <div class="grid-container" id="grid">
-        </div>
+    <div class="grid-container" id="grid"></div>
 
     <script>
-        // State management for the 4 slots
+        // State for 4 Viewports
         const viewports = [
             { id: 0, streamId: null },
             { id: 1, streamId: null },
@@ -218,36 +220,36 @@
                     // EMPTY STATE
                     el.innerHTML = `
                         <div class="empty-state">
-                            <div class="label">Viewport ${index + 1}</div>
-                            <input type="text" id="input-${index}" class="empty-input" placeholder="Enter Broadcast ID or URL">
-                            <button class="load-btn" onclick="loadStream(${index})">Load Stream</button>
+                            <div class="label" style="font-size:11px; margin-bottom:5px;">Viewport ${index + 1}</div>
+                            <input type="text" id="input-${index}" class="empty-input" placeholder="Broadcast ID">
+                            <button class="load-btn" onclick="loadStream(${index})">Load</button>
                         </div>
                     `;
                 } else {
-                    // ACTIVE STATE (Video + Fields)
+                    // ACTIVE STATE - SPLIT VIEW
                     el.innerHTML = `
-                        <button class="close-btn" onclick="clearStream(${index})">&times;</button>
+                        <button class="close-btn" onclick="clearStream(${index})" title="Close Viewport">&times;</button>
                         
-                        <div class="video-container">
+                        <div class="video-wrapper">
                             <iframe src="https://vcloud.hudl.com/broadcast/embed/${vp.streamId}?autoplay=1" allow="autoplay; fullscreen"></iframe>
                         </div>
 
                         <div class="data-panel">
                             <div class="col">
-                                <div class="label">Broadcast Title</div>
-                                <div class="value" style="color: #fff; font-weight:bold;">Varsity Matchup - ID: ${vp.streamId}</div>
-                                <div class="value" style="font-size:11px; color:var(--text-muted);">Starts: 02/16/2026 @ 7:00 PM EST</div>
+                                <div class="label">Broadcast Details</div>
+                                <div class="value-text">Varsity Matchup - ID: ${vp.streamId}</div>
+                                <div class="sub-text">Starts: 02/16/2026 @ 7:00 PM EST</div>
                             </div>
 
-                            <div class="contact-info">
+                            <div class="contact-box">
                                 <div class="row">
                                     <div class="col">
-                                        <div class="label" style="margin:0;">Contact Name</div>
-                                        <div>John Smith (AD)</div>
+                                        <div class="label">Primary Contact</div>
+                                        <div class="value-text" style="font-size:11px;">John Smith (AD)</div>
                                     </div>
                                     <div class="col">
-                                        <div class="label" style="margin:0;">Phone</div>
-                                        <div style="color:var(--primary);">555-0199</div>
+                                        <div class="label">Phone</div>
+                                        <div class="value-text" style="font-size:11px; color:var(--primary);">555-0199</div>
                                     </div>
                                 </div>
                             </div>
@@ -275,7 +277,7 @@
 
                             <div class="col">
                                 <div class="label">Quality Report</div>
-                                <select style="border-color: #334155;">
+                                <select>
                                     <option value="">Select Quality...</option>
                                     <option value="good">🟢 Overall Good</option>
                                     <option value="audio_bad">🟡 Audio Issues</option>
@@ -294,8 +296,7 @@
         function loadStream(index) {
             const input = document.getElementById(`input-${index}`);
             let val = input.value.trim();
-            
-            // Extract ID if full URL is pasted
+            // Handle full URL paste vs ID paste
             const match = val.match(/\/embed\/(\d+)/) || val.match(/broadcast\/(\d+)/);
             if (match) val = match[1];
 
@@ -310,7 +311,7 @@
             render();
         }
 
-        // Initial render
+        // Initialize
         render();
 
     </script>
