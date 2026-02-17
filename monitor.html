@@ -3,204 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hudl Multi-View Monitor</title>
+    <title>Hudl Command Center</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --border: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #f97316;
-            --success: #10b981;
-            --danger: #ef4444;
+            --bg: #0f172a; --card-bg: #1e293b; --border: #334155;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --primary: #f97316; --success: #10b981; --danger: #ef4444; --blue: #3b82f6;
         }
-
         * { box-sizing: border-box; }
-        
         body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg);
-            color: var(--text-main);
+            margin: 0; padding: 0;
+            background-color: var(--bg); color: var(--text-main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            height: 100vh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* Top Navigation Bar */
+        /* Top Bar */
         .top-bar {
-            height: 40px;
-            background: #020617;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            flex-shrink: 0;
+            height: 48px; background: #020617; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 20px; flex-shrink: 0;
         }
         .logo { font-weight: 800; letter-spacing: 0.05em; font-size: 14px; }
         .logo span { color: var(--primary); }
         .nav-link { color: var(--text-muted); text-decoration: none; font-size: 12px; font-weight: 600; }
         .nav-link:hover { color: #fff; }
 
-        /* Main Grid */
-        .grid-container {
-            flex: 1;
+        /* Main Layout: Split vertically */
+        .main-content {
+            display: flex; flex-direction: column; height: calc(100vh - 48px);
+        }
+
+        /* 1. MONITOR SECTION (Top 65%) */
+        .monitor-grid {
+            flex: 65; /* Takes 65% of height */
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
             gap: 8px;
             padding: 8px;
-            /* Calculate height minus top bar */
-            height: calc(100vh - 40px);
-            min-height: 0; /* Crucial for grid overflow handling */
+            min-height: 0;
+            border-bottom: 4px solid #020617;
         }
 
         /* Viewport Card */
         .viewport {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+            display: flex; flex-direction: column; overflow: hidden; position: relative;
         }
 
-        /* --- THE FIX: HARD SPLIT HEIGHTS --- */
+        /* Internal Split: Video takes 65% of card, Data takes 35% */
         .video-wrapper {
-            height: 55%; /* Always takes top 55% */
-            width: 100%;
-            background: #000;
-            position: relative;
-            flex-shrink: 0;
+            height: 65%; width: 100%; background: #000; position: relative; flex-shrink: 0;
         }
-        
+        iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
         .data-panel {
-            height: 45%; /* Always takes bottom 45% */
-            padding: 10px;
-            overflow-y: auto; /* Scroll ONLY the data if screen is tiny */
-            border-top: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            background: #151e2e;
+            height: 35%; padding: 8px 12px; background: #151e2e;
+            display: flex; flex-direction: column; justify-content: space-between;
+            overflow-y: auto;
         }
 
-        iframe {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            border: none;
+        /* Data Styling */
+        .data-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+        .title { font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
+        .sub-title { font-size: 10px; color: var(--text-muted); }
+        
+        .badges { display: flex; gap: 6px; }
+        .badge { font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 3px; border: 1px solid transparent; }
+        .badge-live { background: rgba(16, 185, 129, 0.15); color: #4ade80; border-color: rgba(16, 185, 129, 0.3); }
+        .badge-locked { background: #334155; color: #94a3b8; border-color: #475569; display: flex; align-items: center; gap: 3px; }
+
+        .contact-row {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            padding: 6px 8px; border-radius: 4px; margin-bottom: 4px;
         }
+        .contact-item { font-size: 11px; }
+        .contact-label { font-size: 8px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+
+        .action-row { display: flex; gap: 8px; margin-top: auto; }
+        select {
+            flex: 1; background: #0f172a; border: 1px solid var(--border); color: white;
+            padding: 4px; border-radius: 4px; font-size: 11px; height: 28px;
+        }
+        .slack-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: #4A154B; color: white; border: 1px solid #611f69;
+            padding: 0 10px; border-radius: 4px; font-size: 11px; font-weight: 600;
+            cursor: pointer; height: 28px;
+        }
+        .slack-btn:hover { background: #5c1b5e; }
 
         /* Empty State */
-        .empty-state {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-        }
-        .empty-input {
-            background: var(--bg);
-            border: 1px solid var(--border);
-            padding: 8px;
-            border-radius: 4px;
-            color: white;
-            width: 200px;
-            text-align: center;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-        .load-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            text-transform: uppercase;
-            font-size: 10px;
-            letter-spacing: 1px;
-        }
+        .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); }
+        .empty-input { background: var(--bg); border: 1px solid var(--border); padding: 8px; border-radius: 4px; color: white; width: 200px; text-align: center; margin-bottom: 8px; font-size: 12px; }
+        .load-btn { background: var(--primary); color: white; border: none; padding: 6px 16px; border-radius: 4px; font-weight: bold; cursor: pointer; text-transform: uppercase; font-size: 10px; }
 
-        /* Data Fields Styling */
-        .row { display: flex; gap: 8px; }
-        .col { flex: 1; min-width: 0; }
-
-        .label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            font-weight: 700;
-            margin-bottom: 2px;
-            white-space: nowrap;
-        }
-        .value-text {
-            font-size: 12px;
-            font-weight: 600;
-            color: #fff;
-            white-space: nowrap;
+        /* 2. QUEUE SECTION (Bottom 35%) */
+        .queue-panel {
+            flex: 35; /* Takes 35% of height */
+            background: #0f172a;
+            padding: 0 12px 12px 12px;
             overflow: hidden;
-            text-overflow: ellipsis;
+            display: flex; flex-direction: column;
         }
-        .sub-text {
-            font-size: 10px;
-            color: var(--text-muted);
+        .queue-header {
+            font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);
+            padding: 10px 0; display: flex; justify-content: space-between; align-items: center;
         }
+        
+        .queue-table-container {
+            background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+            flex: 1; overflow-y: auto;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th { text-align: left; padding: 8px 12px; background: rgba(0,0,0,0.2); color: var(--text-muted); font-size: 10px; text-transform: uppercase; position: sticky; top: 0; }
+        td { padding: 8px 12px; border-bottom: 1px solid var(--border); color: #cbd5e1; }
+        tr:hover { background: rgba(255,255,255,0.03); cursor: grab; }
+        .drag-handle { color: var(--text-muted); cursor: grab; }
 
-        .contact-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 6px 8px;
-        }
-
-        select {
-            width: 100%;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 4px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            height: 26px;
-        }
-        select:focus { outline: 1px solid var(--primary); border-color: var(--primary); }
-
-        .close-btn {
-            position: absolute;
-            top: 5px; right: 5px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            border: none;
-            width: 20px; height: 20px;
-            border-radius: 3px;
-            cursor: pointer;
-            z-index: 20;
-            font-size: 14px;
-            line-height: 1;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .close-btn:hover { background: var(--danger); }
+        .close-btn { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: white; border: none; width: 20px; height: 20px; border-radius: 3px; cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
     <div class="top-bar">
-        <div class="logo">HUDL <span>MONITOR</span></div>
+        <div class="logo">HUDL <span>COMMAND CENTER</span></div>
         <a href="index.html" class="nav-link">Exit to Menu</a>
     </div>
 
-    <div class="grid-container" id="grid"></div>
+    <div class="main-content">
+        
+        <div class="monitor-grid" id="monitor-grid">
+            </div>
+
+        <div class="queue-panel">
+            <div class="queue-header">
+                <span>Upcoming Broadcasts (Queue)</span>
+                <span style="font-size: 9px; background: #334155; padding: 2px 6px; rounded: 3px;">12 Pending</span>
+            </div>
+            <div class="queue-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th>Sport</th>
+                            <th>Broadcast Title</th>
+                            <th>Time</th>
+                            <th>Site</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="queue-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
 
     <script>
-        // State for 4 Viewports
+        // --- DATA ---
+        const assignees = ["Alex", "Michael", "John", "Richard", "Whitney", "Sarah"];
+        
         const viewports = [
             { id: 0, streamId: null },
             { id: 1, streamId: null },
@@ -208,8 +173,18 @@
             { id: 3, streamId: null }
         ];
 
-        function render() {
-            const grid = document.getElementById('grid');
+        const queueData = [
+            { id: 4401, sport: "🏀", title: "Varsity Boys vs. Lincoln High", time: "7:00 PM", site: "Northside HS", status: "Upcoming" },
+            { id: 4402, sport: "🏐", title: "Regional Volleyball Finals", time: "7:30 PM", site: "Civic Center", status: "Upcoming" },
+            { id: 4403, sport: "🤼", title: "State Wrestling: Mat 1", time: "8:00 PM", site: "Arena B", status: "Upcoming" },
+            { id: 4404, sport: "⚽", title: "Girls Soccer District Match", time: "8:15 PM", site: "West Field", status: "Upcoming" },
+            { id: 4405, sport: "🏒", title: "Ice Hockey: Semi-Finals", time: "8:30 PM", site: "Ice Plex", status: "Upcoming" },
+            { id: 4406, sport: "🏀", title: "JV Girls vs. South", time: "5:00 PM", site: "Northside HS", status: "Late" },
+        ];
+
+        // --- RENDER MONITOR ---
+        function renderMonitor() {
+            const grid = document.getElementById('monitor-grid');
             grid.innerHTML = '';
 
             viewports.forEach((vp, index) => {
@@ -217,74 +192,53 @@
                 el.className = 'viewport';
 
                 if (!vp.streamId) {
-                    // EMPTY STATE
                     el.innerHTML = `
                         <div class="empty-state">
-                            <div class="label" style="font-size:11px; margin-bottom:5px;">Viewport ${index + 1}</div>
-                            <input type="text" id="input-${index}" class="empty-input" placeholder="Broadcast ID">
+                            <div style="font-size:10px; font-weight:700; text-transform:uppercase; margin-bottom:5px; color:#475569;">Viewport ${index + 1}</div>
+                            <input type="text" id="input-${index}" class="empty-input" placeholder="Enter ID or Drag from Queue">
                             <button class="load-btn" onclick="loadStream(${index})">Load</button>
                         </div>
                     `;
                 } else {
-                    // ACTIVE STATE - SPLIT VIEW
+                    const assignee = assignees[index % assignees.length]; // Rotate names based on slot
                     el.innerHTML = `
-                        <button class="close-btn" onclick="clearStream(${index})" title="Close Viewport">&times;</button>
-                        
+                        <button class="close-btn" onclick="clearStream(${index})">&times;</button>
                         <div class="video-wrapper">
                             <iframe src="https://vcloud.hudl.com/broadcast/embed/${vp.streamId}?autoplay=1" allow="autoplay; fullscreen"></iframe>
                         </div>
-
                         <div class="data-panel">
-                            <div class="col">
-                                <div class="label">Broadcast Details</div>
-                                <div class="value-text">Varsity Matchup - ID: ${vp.streamId}</div>
-                                <div class="sub-text">Starts: 02/16/2026 @ 7:00 PM EST</div>
-                            </div>
-
-                            <div class="contact-box">
-                                <div class="row">
-                                    <div class="col">
-                                        <div class="label">Primary Contact</div>
-                                        <div class="value-text" style="font-size:11px;">John Smith (AD)</div>
-                                    </div>
-                                    <div class="col">
-                                        <div class="label">Phone</div>
-                                        <div class="value-text" style="font-size:11px; color:var(--primary);">555-0199</div>
+                            <div>
+                                <div class="data-header">
+                                    <div class="title" title="Varsity Matchup - ID: ${vp.streamId}">Varsity Matchup - ID: ${vp.streamId}</div>
+                                    <div class="badges">
+                                        <div class="badge badge-locked">🔒 ${assignee}</div>
+                                        <div class="badge badge-live">● LIVE</div>
                                     </div>
                                 </div>
+                                <div class="sub-title">02/17/2026 @ 7:00 PM EST</div>
                             </div>
-
-                            <div class="row">
-                                <div class="col">
-                                    <div class="label">Status</div>
-                                    <select>
-                                        <option value="live">Live</option>
-                                        <option value="upcoming">Upcoming</option>
-                                        <option value="archived">Archived</option>
-                                        <option value="stopped">Stopped</option>
-                                    </select>
+                            
+                            <div class="contact-row">
+                                <div class="contact-item">
+                                    <div class="contact-label">Contact</div>
+                                    <div style="font-weight:600;">John Smith</div>
                                 </div>
-                                <div class="col">
-                                    <div class="label">Assignee</div>
-                                    <select>
-                                        <option value="">Unassigned</option>
-                                        <option value="troy">Troy Comeau</option>
-                                        <option value="kerry">Kerry Stadler</option>
-                                        <option value="support">General Support</option>
-                                    </select>
+                                <div class="contact-item" style="text-align:right;">
+                                    <div class="contact-label">Phone</div>
+                                    <div style="color:var(--primary); font-family:monospace;">555-0199</div>
                                 </div>
                             </div>
 
-                            <div class="col">
-                                <div class="label">Quality Report</div>
+                            <div class="action-row">
                                 <select>
-                                    <option value="">Select Quality...</option>
-                                    <option value="good">🟢 Overall Good</option>
-                                    <option value="audio_bad">🟡 Audio Issues</option>
-                                    <option value="video_bad">🟡 Video Issues</option>
-                                    <option value="no_score">🟡 No Scoreboard</option>
-                                    <option value="bad">🔴 Overall Bad</option>
+                                    <option>Quality: Good</option>
+                                    <option>Issues: Audio</option>
+                                    <option>Issues: Video</option>
+                                    <option>Issues: Scoreboard</option>
                                 </select>
+                                <button class="slack-btn" onclick="alert('Slack message sent to #${assignee.toLowerCase()}-ops channel for Stream ${vp.streamId}')">
+                                    <span>#</span> Notify
+                                </button>
                             </div>
                         </div>
                     `;
@@ -293,26 +247,60 @@
             });
         }
 
+        // --- RENDER QUEUE ---
+        function renderQueue() {
+            const tbody = document.getElementById('queue-body');
+            tbody.innerHTML = queueData.map(row => `
+                <tr draggable="true" ondragstart="handleDragStart(event, '${row.id}')">
+                    <td class="drag-handle">⋮⋮</td>
+                    <td>${row.sport}</td>
+                    <td style="font-weight:600; color:white;">${row.title}</td>
+                    <td>${row.time}</td>
+                    <td>${row.site}</td>
+                    <td><span style="font-size:9px; text-transform:uppercase; font-weight:bold; color:${row.status === 'Late' ? '#ef4444' : '#94a3b8'}">${row.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // --- LOGIC ---
         function loadStream(index) {
             const input = document.getElementById(`input-${index}`);
             let val = input.value.trim();
-            // Handle full URL paste vs ID paste
             const match = val.match(/\/embed\/(\d+)/) || val.match(/broadcast\/(\d+)/);
             if (match) val = match[1];
-
             if (val) {
                 viewports[index].streamId = val;
-                render();
+                renderMonitor();
             }
         }
 
         function clearStream(index) {
             viewports[index].streamId = null;
-            render();
+            renderMonitor();
         }
 
-        // Initialize
-        render();
+        // Fake Drag & Drop Logic
+        function handleDragStart(e, id) {
+            e.dataTransfer.setData("text/plain", id);
+        }
+
+        // Allow dropping on viewports
+        document.addEventListener('dragover', (e) => e.preventDefault());
+        document.addEventListener('drop', (e) => {
+            e.preventDefault();
+            // Simple logic: if dropped anywhere, load into first empty slot or Slot 1
+            const id = e.dataTransfer.getData("text/plain");
+            if (id) {
+                const emptySlot = viewports.findIndex(v => v.streamId === null);
+                const target = emptySlot !== -1 ? emptySlot : 0;
+                viewports[target].streamId = id;
+                renderMonitor();
+            }
+        });
+
+        // Init
+        renderMonitor();
+        renderQueue();
 
     </script>
 </body>
