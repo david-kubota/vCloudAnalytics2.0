@@ -3,41 +3,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hudl Analytics Suite</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<title>Broadcast Grid</title>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+<script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+
 <style>
-  :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --primary: #f97316; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; }
-  h1 { font-size: 2.5rem; margin-bottom: 3rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; width: 100%; max-width: 1000px; padding: 0 1rem; }
-  .card { 
-    background: var(--card); border: 1px solid #334155; border-radius: 1rem; padding: 2.5rem; text-align: center; 
-    text-decoration: none; color: white; transition: all 0.2s; cursor: pointer; display: flex; flex-direction: column; align-items: center;
+  :root {
+    --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8;
+    --primary: #f97316; --border: #334155; --hover: #334155;
+    --success: #10b981; --danger: #ef4444; --warning: #f59e0b; --info: #3b82f6;
   }
-  .card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 10px 30px -10px rgba(249, 115, 22, 0.3); }
-  .icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
-  .title { font-size: 1.25rem; font-weight: 700; display: block; margin-bottom: 0.5rem; }
-  .desc { color: #94a3b8; font-size: 0.9rem; line-height: 1.5; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; font-size: 14px; }
+  
+  .container { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+  h1 { font-size: 1.5rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+  .back-link { text-decoration: none; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; transition: 0.2s; }
+  .back-link:hover { color: #fff; }
+
+  /* Upload */
+  .upload-container { display: flex; height: 80vh; align-items: center; justify-content: center; }
+  .upload-box { border: 2px dashed var(--border); padding: 4rem; text-align: center; border-radius: 1rem; cursor: pointer; background: var(--card); transition: 0.2s; max-width: 500px; }
+  .upload-box:hover { border-color: var(--primary); background: rgba(249, 115, 22, 0.05); }
+
+  /* Controls */
+  .filters { background: var(--card); padding: 1.5rem; border-radius: 0.5rem; border: 1px solid var(--border); margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+  .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
+  .filter-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+  input, select { background: #020617; border: 1px solid var(--border); color: #fff; padding: 0.5rem; border-radius: 0.25rem; width: 100%; font-size: 0.85rem; }
+  input:focus, select:focus { outline: none; border-color: var(--primary); }
+
+  /* Table */
+  .table-wrapper { background: var(--card); border: 1px solid var(--border); border-radius: 0.5rem; overflow: hidden; }
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 1rem; background: #0f172a; border-bottom: 1px solid var(--border); color: var(--muted); font-weight: 600; white-space: nowrap; cursor: pointer; user-select: none; }
+  th:hover { color: #fff; background: #152035; }
+  td { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover { background: rgba(255,255,255,0.02); }
+
+  /* Badges & Status */
+  .badge { padding: 0.25rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
+  .status-streaming { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+  .status-archived { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+  .status-scheduled { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+  .status-stopped { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+  
+  .pagination { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--card); border-top: 1px solid var(--border); }
+  .btn { background: var(--primary); border: none; color: white; padding: 0.5rem 1rem; border-radius: 0.25rem; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--hover); }
+  .icon-btn { padding: 0.25rem; border-radius: 4px; cursor: pointer; }
+  .icon-btn:hover { background: var(--hover); }
 </style>
 </head>
 <body>
-  <h1>Hudl Analytics Suite</h1>
-  <div class="grid">
-    <a href="analytics.html" class="card">
-      <span class="icon">📡</span>
-      <span class="title">Livestream Analytics</span>
-      <span class="desc">Analyze viewership, unique plays, and device breakdowns for Hudl TV broadcasts.</span>
-    </a>
-    <a href="ppv.html" class="card">
-      <span class="icon">💰</span>
-      <span class="title">PPV Revenue</span>
-      <span class="desc">Track ticket sales, net revenue, and purchase trends for Pay-Per-View events.</span>
-    </a>
-    <a href="broadcast_grid.html" class="card">
-      <span class="icon">📋</span>
-      <span class="title">Broadcast Grid</span>
-      <span class="desc">Searchable data grid of all broadcast records with status, plans, and contact info.</span>
-    </a>
-  </div>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState, useMemo, useEffect } = React;
+  
+  const App = () => {
+    const [data, setData] = useState(null);
+    const [fileName, setFileName] = useState("");
+    
+    // Filters
+    const [filters, setFilters] = useState({
+      id: '', title: '', date: '', section: 'All', site: 'All', customer: 'All', status: 'All'
+    });
+    
+    // Sorting & Pagination
+    const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(25);
+
+    // --- PARSING ---
+    const handleFileUpload = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      setFileName(file.name);
+      
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const processed = results.data.map(row => ({
+            id: row['Broadcast ID'],
+            title: row['Title'],
+            date: new Date(row['Scheduled Date']),
+            dateStr: row['Scheduled Date'], // Keep original string for display
+            section: row['Section'],
+            site: row['Site'],
+            customer: row['Customer'],
+            status: row['Status'],
+            plan: row['Stream Plan'],
+            contact: row['Contact Name'],
+            email: row['Contact Email']
+          }));
+          setData(processed);
+        }
+      });
+    };
+
+    // --- FILTERING ---
+    const filteredData = useMemo(() => {
+      if (!data) return [];
+      return data.filter(item => {
+        return (
+          (!filters.id || String(item.id).includes(filters.id)) &&
+          (!filters.title || item.title.toLowerCase().includes(filters.title.toLowerCase())) &&
+          (!filters.date || item.dateStr.includes(filters.date)) && // Simple string match for date
+          (filters.section === 'All' || item.section === filters.section) &&
+          (filters.site === 'All' || item.site === filters.site) &&
+          (filters.customer === 'All' || item.customer === filters.customer) &&
+          (filters.status === 'All' || item.status === filters.status)
+        );
+      });
+    }, [data, filters]);
+
+    // --- SORTING ---
+    const sortedData = useMemo(() => {
+      let sortableItems = [...filteredData];
+      if (sortConfig.key !== null) {
+        sortableItems.sort((a, b) => {
+          let aValue = a[sortConfig.key];
+          let bValue = b[sortConfig.key];
+          
+          if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+          if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+          return 0;
+        });
+      }
+      return sortableItems;
+    }, [filteredData, sortConfig]);
+
+    // --- PAGINATION ---
+    const paginatedData = useMemo(() => {
+      const start = (currentPage - 1) * itemsPerPage;
+      return sortedData.slice(start, start + itemsPerPage);
+    }, [sortedData, currentPage, itemsPerPage]);
+
+    // --- OPTIONS GENERATORS ---
+    const getOptions = (key) => {
+      if (!data) return [];
+      return ['All', ...new Set(data.map(item => item[key]).filter(Boolean))].sort();
+    };
+
+    const requestSort = (key) => {
+      let direction = 'asc';
+      if (sortConfig.key === key && sortConfig.direction === 'asc') {
+        direction = 'desc';
+      }
+      setSortConfig({ key, direction });
+    };
+
+    if (!data) {
+      return (
+        <div className="container">
+           <div style={{marginBottom:'2rem'}}><a href="index.html" className="back-link">← Back to Menu</a></div>
+           <div className="upload-container">
+            <label className="upload-box">
+              <input type="file" accept=".csv" hidden onChange={handleFileUpload} />
+              <div style={{fontSize:'3rem', marginBottom:'1rem'}}>📋</div>
+              <h2>Broadcast Grid</h2>
+              <div style={{color:'var(--muted)'}}>Upload <strong>grid.csv</strong> to view</div>
+            </label>
+           </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="container">
+        <div className="header">
+          <div>
+            <a href="index.html" className="back-link">← Back to Menu</a>
+            <h1>Broadcast Grid</h1>
+            <div style={{color: 'var(--muted)', fontSize:'0.85rem'}}>{filteredData.length} records found • {fileName}</div>
+          </div>
+          <button className="btn btn-outline" onClick={() => setData(null)}>Upload New</button>
+        </div>
+
+        {/* FILTERS */}
+        <div className="filters">
+          <div className="filter-group">
+            <div className="filter-label">ID</div>
+            <input type="text" placeholder="Search ID..." value={filters.id} onChange={e => setFilters({...filters, id: e.target.value})} />
+          </div>
+          <div className="filter-group">
+            <div className="filter-label">Title</div>
+            <input type="text" placeholder="Search Title..." value={filters.title} onChange={e => setFilters({...filters, title: e.target.value})} />
+          </div>
+          <div className="filter-group">
+            <div className="filter-label">Status</div>
+            <select value={filters.status} onChange={e => setFilters({...filters, status: e.target.value})}>
+              {getOptions('status').map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="filter-group">
+            <div className="filter-label">Section</div>
+            <select value={filters.section} onChange={e => setFilters({...filters, section: e.target.value})}>
+              {getOptions('section').map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+          <div className="filter-group">
+            <div className="filter-label">Site</div>
+            <select value={filters.site} onChange={e => setFilters({...filters, site: e.target.value})}>
+              {getOptions('site').map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+           <div className="filter-group">
+            <div className="filter-label">Customer</div>
+            <select value={filters.customer} onChange={e => setFilters({...filters, customer: e.target.value})}>
+              {getOptions('customer').map(o => <option key={o} value={o}>{o}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* GRID */}
+        <div className="table-wrapper">
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th onClick={() => requestSort('id')}>ID {sortConfig.key==='id' && (sortConfig.direction==='asc'?'↑':'↓')}</th>
+                  <th onClick={() => requestSort('status')}>Status {sortConfig.key==='status' && (sortConfig.direction==='asc'?'↑':'↓')}</th>
+                  <th onClick={() => requestSort('date')}>Date {sortConfig.key==='date' && (sortConfig.direction==='asc'?'↑':'↓')}</th>
+                  <th onClick={() => requestSort('title')}>Title {sortConfig.key==='title' && (sortConfig.direction==='asc'?'↑':'↓')}</th>
+                  <th>Section</th>
+                  <th>Site</th>
+                  <th>Plan</th>
+                  <th>Contact</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map(row => (
+                  <tr key={row.id}>
+                    <td>{row.id}</td>
+                    <td>
+                      <span className={`badge status-${row.status.toLowerCase()}`}>
+                        {row.status}
+                      </span>
+                    </td>
+                    <td style={{whiteSpace:'nowrap'}}>{row.dateStr}</td>
+                    <td style={{fontWeight:'500'}}>{row.title}</td>
+                    <td>{row.section}</td>
+                    <td>{row.site}</td>
+                    <td style={{fontSize:'0.8rem', color:'var(--muted)'}}>{row.plan}</td>
+                    <td>
+                      <div>{row.contact}</div>
+                      <div style={{fontSize:'0.75rem', color:'var(--muted)'}}>{row.email}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* PAGINATION */}
+          <div className="pagination">
+            <div style={{color:'var(--muted)'}}>
+              Page {currentPage} of {Math.ceil(filteredData.length / itemsPerPage)}
+            </div>
+            <div style={{display:'flex', gap:'1rem'}}>
+              <select value={itemsPerPage} onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }} style={{width:'auto'}}>
+                <option value={15}>15 per page</option>
+                <option value={25}>25 per page</option>
+                <option value={50}>50 per page</option>
+                <option value={100}>100 per page</option>
+              </select>
+              <div style={{display:'flex', gap:'0.5rem'}}>
+                <button className="btn btn-outline" onClick={() => setCurrentPage(c => Math.max(1, c - 1))} disabled={currentPage === 1}>Prev</button>
+                <button className="btn btn-outline" onClick={() => setCurrentPage(c => Math.min(Math.ceil(filteredData.length / itemsPerPage), c + 1))} disabled={currentPage >= Math.ceil(filteredData.length / itemsPerPage)}>Next</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
 </body>
 </html>
