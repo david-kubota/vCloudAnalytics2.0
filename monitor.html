@@ -24,7 +24,7 @@
         .data-bar { height: 10%; background: #151e2e; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border-top: 1px solid var(--border); gap: 10px; }
         
         /* Data Elements */
-        .info-group { display: flex; align-items: center; gap: 12px; overflow: hidden; white-space: nowrap; flex: 1; }
+        .info-group { display: flex; align-items: center; gap: 10px; overflow: hidden; white-space: nowrap; flex: 1; }
         .b-title { font-size: 13px; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; }
         .b-date { font-size: 11px; color: #94a3b8; font-weight: 500; }
         
@@ -32,8 +32,12 @@
         .pulse { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-        .controls-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-        select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; height: 24px; outline: none; }
+        .controls-group { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        select { background: #0f172a; border: 1px solid var(--border); color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; height: 26px; outline: none; }
+        
+        .action-btn { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; rounded: 4px; background: #1e293b; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; border-radius: 4px; text-decoration: none; }
+        .action-btn:hover { background: #334155; }
+        .slack-btn:hover { background: #4A154B; border-color: #611f69; color: white; } /* Slack Purple */
 
         /* Empty State */
         .empty-state { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -64,7 +68,7 @@
     <div class="queue-panel">
         <div class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 flex justify-between items-center">
             <span>Drag & Drop Queue</span>
-            <span class="bg-slate-800 px-3 py-1 rounded text-[10px]">12 Pending</span>
+            <span class="bg-slate-800 px-3 py-1 rounded text-[10px]" id="queue-count">16 Pending</span>
         </div>
         <table class="queue-table">
             <thead><tr><th style="width: 30px;"></th><th>Sport</th><th>Title</th><th>Time</th><th>Site</th><th>Status</th></tr></thead>
@@ -80,10 +84,24 @@
             { id: 3, streamId: null }
         ];
 
+        // 16 Real Broadcast IDs + Dummy Data
         const queueData = [
-            { id: 4401, sport: "🏀", title: "Varsity Boys vs. Lincoln High", time: "7:00 PM", site: "Northside HS", status: "Upcoming" },
-            { id: 4402, sport: "🏐", title: "Regional Volleyball Finals", time: "7:30 PM", site: "Civic Center", status: "Upcoming" },
-            { id: 4403, sport: "🤼", title: "State Wrestling: Mat 1", time: "8:00 PM", site: "Arena B", status: "Upcoming" }
+            { id: 3064927, sport: "🏀", title: "Varsity Boys vs. Tigers", time: "7:00 PM", site: "Central HS", status: "Upcoming" },
+            { id: 3065104, sport: "🏐", title: "Regional Volleyball Finals", time: "7:30 PM", site: "Westside Gym", status: "Upcoming" },
+            { id: 3064926, sport: "🤼", title: "State Wrestling Tournament", time: "8:00 PM", site: "Arena A", status: "Upcoming" },
+            { id: 3064925, sport: "⚽", title: "Girls Soccer District Match", time: "5:15 PM", site: "North Field", status: "Late" },
+            { id: 3065103, sport: "🏒", title: "Ice Hockey Semi-Finals", time: "8:30 PM", site: "Ice Plex", status: "Upcoming" },
+            { id: 3065101, sport: "🏀", title: "JV Boys Basketball", time: "5:00 PM", site: "Central HS", status: "Live" },
+            { id: 3192732, sport: "🏈", title: "Friday Night Lights: Playoffs", time: "7:00 PM", site: "Memorial Stadium", status: "Upcoming" },
+            { id: 3041453, sport: "⚾", title: "Varsity Baseball Opener", time: "4:00 PM", site: "East Field", status: "Upcoming" },
+            { id: 3041433, sport: "🥎", title: "Girls Softball Doubleheader", time: "4:30 PM", site: "South Park", status: "Upcoming" },
+            { id: 3041505, sport: "📣", title: "Cheer & Dance Competition", time: "6:00 PM", site: "Main Gym", status: "Upcoming" },
+            { id: 3041407, sport: "👟", title: "Track and Field Qualifier", time: "3:00 PM", site: "High School Track", status: "Live" },
+            { id: 3041373, sport: "🏊", title: "Swimming Regionals Day 1", time: "5:00 PM", site: "Aquatics Center", status: "Upcoming" },
+            { id: 3041531, sport: "🏀", title: "Freshman Boys Basketball", time: "4:00 PM", site: "West Gym", status: "Live" },
+            { id: 3041557, sport: "🏐", title: "JV Volleyball", time: "5:30 PM", site: "East Gym", status: "Upcoming" },
+            { id: 3054036, sport: "🤼", title: "JV Wrestling Dual", time: "6:00 PM", site: "Arena B", status: "Upcoming" },
+            { id: 3093874, sport: "⚽", title: "Boys Soccer Championships", time: "7:30 PM", site: "North Field", status: "Upcoming" }
         ];
 
         function renderMonitor() {
@@ -99,20 +117,23 @@
                         <div class="empty-state">
                             <div class="text-xs font-bold text-slate-500 uppercase mb-2">Viewport ${index + 1}</div>
                             <input type="text" id="input-${index}" class="bg-slate-900 border border-slate-700 p-2 rounded text-xs text-center w-48 mb-2" placeholder="ID or Drag from Queue">
-                            <button class="bg-orange-600 text-white text-[10px] font-bold px-4 py-1.5 rounded uppercase" onclick="loadStream(${index})">Load</button>
+                            <button class="bg-orange-600 text-white text-[10px] font-bold px-4 py-1.5 rounded uppercase hover:bg-orange-500 transition" onclick="loadStream(${index})">Load</button>
                         </div>
                     `;
                 } else {
                     el.innerHTML = `
-                        <button class="close-btn" onclick="clearStream(${index})">&times;</button>
+                        <button class="close-btn" onclick="clearStream(${index})" title="Close Viewport">&times;</button>
                         <div class="video-wrapper">
                             <iframe src="https://vcloud.hudl.com/broadcast/embed/${vp.streamId}?autoplay=1" allow="autoplay; fullscreen"></iframe>
                         </div>
                         <div class="data-bar">
                             <div class="info-group">
                                 <div class="b-status"><div class="pulse"></div> LIVE</div>
-                                <div class="b-title" title="Varsity Matchup - ID: ${vp.streamId}">Varsity Matchup - ID: ${vp.streamId}</div>
-                                <div class="b-date">02/17 @ 7:00 PM</div>
+                                <div class="b-title" title="Broadcast ID: ${vp.streamId}">Broadcast ID: ${vp.streamId}</div>
+                                
+                                <a href="#" class="text-slate-400 hover:text-white transition text-sm" title="View Broadcast Details in Admin">ⓘ</a>
+                                
+                                <div class="b-date">Today @ 7:00 PM</div>
                             </div>
                             
                             <div class="controls-group">
@@ -120,16 +141,21 @@
                                     <option>Quality: Good</option>
                                     <option>Audio Issue</option>
                                     <option>Video Issue</option>
+                                    <option>No Scoreboard</option>
                                 </select>
 
-                                <div class="relative group cursor-pointer flex items-center justify-center w-6 h-6 rounded bg-slate-800 hover:bg-slate-700 transition">
-                                    <span class="text-xs">📞</span>
-                                    <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-slate-800 border border-slate-600 p-3 rounded shadow-xl z-50 whitespace-nowrap">
+                                <div class="relative group cursor-pointer action-btn text-xs" title="View Contact Info">
+                                    📞
+                                    <div class="absolute bottom-full right-0 mb-2 hidden group-hover:block bg-slate-800 border border-slate-600 p-3 rounded shadow-xl z-50 whitespace-nowrap text-left">
                                         <div class="text-[10px] text-slate-400 uppercase font-bold mb-1">Primary Contact</div>
-                                        <div class="text-sm font-bold text-white">John Smith</div>
+                                        <div class="text-sm font-bold text-white">John Smith (AD)</div>
                                         <div class="text-xs text-orange-400 mt-1 font-mono">555-0199</div>
                                     </div>
                                 </div>
+
+                                <button class="action-btn slack-btn text-xs font-bold" title="Send Slack Message" onclick="alert('Slack message sent to Ops channel regarding Broadcast ${vp.streamId}')">
+                                    #
+                                </button>
                             </div>
                         </div>
                     `;
@@ -139,14 +165,18 @@
         }
 
         function renderQueue() {
+            document.getElementById('queue-count').innerText = `${queueData.length} Pending`;
             document.getElementById('queue-body').innerHTML = queueData.map(row => `
                 <tr draggable="true" ondragstart="event.dataTransfer.setData('text/plain', '${row.id}')">
                     <td class="text-slate-500 cursor-grab">⋮⋮</td>
-                    <td>${row.sport}</td>
-                    <td class="font-bold text-white">${row.title}</td>
+                    <td class="text-xl">${row.sport}</td>
+                    <td>
+                        <div class="font-bold text-white">${row.title}</div>
+                        <div class="text-[10px] text-slate-500 font-mono mt-0.5">ID: ${row.id}</div>
+                    </td>
                     <td>${row.time}</td>
                     <td>${row.site}</td>
-                    <td><span class="text-[9px] font-bold uppercase text-slate-400">${row.status}</span></td>
+                    <td><span class="text-[9px] font-bold uppercase ${row.status === 'Late' ? 'text-red-400' : 'text-slate-400'}">${row.status}</span></td>
                 </tr>
             `).join('');
         }
@@ -171,7 +201,8 @@
             }
         });
 
-        renderMonitor(); renderQueue();
+        renderMonitor(); 
+        renderQueue();
     </script>
 </body>
 </html>
