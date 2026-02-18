@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Support Manager Dashboard</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .card { background-color: #1e293b; border: 1px solid #334155; }
+        select { background: #0f172a; border: 1px solid #334155; color: white; outline: none; }
+        tr:hover { background-color: rgba(255,255,255,0.02); }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+  const { useState } = React;
+
+  const App = () => {
+    const reps = ["Unassigned", "Alex", "Michael", "John", "Richard", "Whitney", "Sarah"];
+    
+    const [broadcasts, setBroadcasts] = useState([
+      { id: 3568041, sport: "🏀", title: "Varsity Men's Basketball vs. Central High", date: "02/17/2026 @ 7:00 PM", site: "Pittsburg State", status: "Live", assignee: "Alex" },
+      { id: 3676742, sport: "🏐", title: "Women's Volleyball Invitational", date: "02/18/2026 @ 5:00 PM", site: "Northeastern State", status: "Upcoming", assignee: "Sarah" },
+      { id: 3686948, sport: "🏈", title: "Friday Night Lights: Glenburn vs Tioga", date: "02/19/2026 @ 7:30 PM", site: "Glenburn HS", status: "Upcoming", assignee: "Unassigned" },
+      { id: 2975037, sport: "🤼", title: "Regional Wrestling Finals", date: "02/15/2026 @ 3:00 PM", site: "Central Missouri", status: "Upcoming", assignee: "Michael" },
+      { id: 4001234, sport: "⚽", title: "Varsity Girls Soccer Finals", date: "02/20/2026 @ 6:00 PM", site: "Northside Complex", status: "Upcoming", assignee: "Unassigned" }
+    ]);
+
+    const handleAssign = (id, newAssignee) => {
+        setBroadcasts(broadcasts.map(b => b.id === id ? { ...b, assignee: newAssignee } : b));
+    };
+
+    return (
+      <div className="p-8 max-w-6xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8 pb-4 border-b border-slate-700">
+            <div>
+                <h1 className="text-2xl font-black tracking-tight">Support <span className="text-orange-500">Manager Dashboard</span></h1>
+                <p className="text-slate-400 text-sm mt-1">Assign support representatives to monitor specific high-priority broadcasts.</p>
+            </div>
+            <div className="flex gap-4">
+                <a href="monitor.html" className="text-sm text-slate-400 hover:text-white font-bold flex items-center">← Back to Monitor</a>
+            </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex justify-between items-center mb-4 bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+            <div className="flex gap-4 items-center">
+                <input type="text" placeholder="Search broadcasts..." className="bg-slate-900 border border-slate-700 p-2 rounded-lg text-sm w-64 focus:border-orange-500" />
+                <select className="p-2 rounded-lg text-sm">
+                    <option>Filter: All Assignments</option>
+                    <option>Unassigned Only</option>
+                </select>
+            </div>
+            <button className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-2 rounded-lg font-bold text-sm transition shadow-lg shadow-orange-900/20" onClick={() => alert("Assignments saved to database.")}>
+                Save Assignments
+            </button>
+        </div>
+
+        {/* Dashboard Grid */}
+        <div className="card rounded-xl overflow-hidden shadow-2xl">
+            <table className="w-full text-left text-sm">
+                <thead className="bg-slate-800 text-slate-400 uppercase text-[10px] font-black tracking-widest border-b border-slate-700">
+                    <tr>
+                        <th className="p-4 w-12">Sport</th>
+                        <th className="p-4">Broadcast Details</th>
+                        <th className="p-4">Site</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 w-48 bg-slate-800 border-l border-slate-700 text-white">Assigned Rep</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                    {broadcasts.map(b => (
+                        <tr key={b.id} className="transition group">
+                            <td className="p-4 text-2xl text-center">{b.sport}</td>
+                            <td className="p-4">
+                                <div className="font-bold text-slate-100">{b.title}</div>
+                                <div className="text-[10px] text-slate-500 mt-1 uppercase tracking-tighter">ID: {b.id} • {b.date}</div>
+                            </td>
+                            <td className="p-4 text-slate-300 font-medium">{b.site}</td>
+                            <td className="p-4">
+                                <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase border ${b.status === 'Live' ? 'bg-green-900/30 text-green-400 border-green-800' : 'bg-blue-900/30 text-blue-400 border-blue-800'}`}>
+                                    {b.status}
+                                </span>
+                            </td>
+                            <td className="p-4 bg-slate-800/30 border-l border-slate-700">
+                                <select 
+                                    className={`w-full p-2 rounded text-xs font-bold ${b.assignee === 'Unassigned' ? 'border-red-500 text-red-400' : 'border-slate-600'}`}
+                                    value={b.assignee}
+                                    onChange={(e) => handleAssign(b.id, e.target.value)}
+                                >
+                                    {reps.map(rep => <option key={rep} value={rep}>{rep}</option>)}
+                                </select>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+
+      </div>
+    );
+  };
+
+  const root = ReactDOM.createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
+</body>
+</html>
