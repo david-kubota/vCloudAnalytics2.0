@@ -13,139 +13,34 @@
   .card { background-color: #1e293b; border: 1px solid #334155; }
   input, select, textarea { background: #0f172a; border: 1px solid #334155; color: white; outline: none; }
   input:focus, select:focus, textarea:focus { border-color: #f97316; }
-  tr:hover td { background-color: rgba(255,255,255,0.015); }
+  .feed-row { cursor: pointer; }
+  .feed-row:hover td { background-color: rgba(249,115,22,0.04); }
 </style>
 </head>
 <body>
 <div id="root"></div>
 
 <script type="text/babel">
-const { useState } = React;
+const { useState, useMemo } = React;
 
-// ─── Mock Data ──────────────────────────────────────────────────────────────
-const MOCK_ORDERS = [
-  {
-    orderNumber: "gh4b4t24mxqe",
-    id: "VGlja2V0R3JvdXA2ODdlNzFhMzYzMjEyOGExYzYwYjI1ZTk=",
-    userId: "26806767",
-    firstName: "Janet",
-    lastName: "Jones",
-    email: "rjjfriday@aol.com",
-    orderTotal: 80.00,
-    currency: "USD",
-    itemCategories: "Pass",
-    source: "Mobile",
-    createdAt: "2025-07-21T16:58:11.452Z",
-    updatedAt: "2025-08-27T22:22:22.270Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    passes: [
-      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlNw==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null },
-      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlOA==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "ab1c2d34efgh",
-    id: "VGlja2V0R3JvdXBhYjFjMmQzNGVmZ2gxMjM0NTY3ODk=",
-    userId: "19283746",
-    firstName: "Michael",
-    lastName: "Torres",
-    email: "mtorres@gmail.com",
-    orderTotal: 10.60,
-    currency: "USD",
-    itemCategories: "Single Game",
-    source: "Web",
-    createdAt: "2026-01-15T20:30:00.000Z",
-    updatedAt: "2026-01-15T21:05:33.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Refunded",
-    passes: [
-      { passId: "UGFzczE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", passConfigId: "UGFzc0NvbmZpZzE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", source: "Web", reservedSeats: null }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "xy9z8w76vuqr",
-    id: "VGlja2V0R3JvdXB4eTl6OHc3NnZ1cXIxMjM0NTY3ODk=",
-    userId: "38475610",
-    firstName: "Sarah",
-    lastName: "Mitchell",
-    email: "sarah.m@yahoo.com",
-    orderTotal: 42.00,
-    currency: "USD",
-    itemCategories: "Season Pass",
-    source: "Mobile",
-    createdAt: "2025-09-01T14:00:00.000Z",
-    updatedAt: "2025-11-10T18:00:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    passes: [
-      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", source: "Mobile", reservedSeats: null },
-      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", source: "Mobile", reservedSeats: "Row C, Seat 12" }
-    ],
-    transferHistory: [
-      { date: "2025-10-15T09:00:00.000Z", from: "sarah.m@yahoo.com", to: "mark.mitchell@gmail.com", passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", action: "Transfer" }
-    ]
-  },
-  {
-    orderNumber: "mn5p6q78rstu",
-    id: "VGlja2V0R3JvdXBtbjVwNnE3OHJzdHUxMjM0NTY3ODk=",
-    userId: "47382910",
-    firstName: "David",
-    lastName: "Chen",
-    email: "dchen@hotmail.com",
-    orderTotal: 14.99,
-    currency: "USD",
-    itemCategories: "Single Game",
-    source: "Web",
-    createdAt: "2026-02-10T11:00:00.000Z",
-    updatedAt: "2026-02-10T11:00:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    passes: [
-      { passId: "UGFzczQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", passConfigId: "UGFzc0NvbmZpZzQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", source: "Web", reservedSeats: null }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "rp2q3r45stuv",
-    id: "VGlja2V0R3JvdXBycDJxM3I0NXN0dXYxMjM0NTY3ODk=",
-    userId: "55019283",
-    firstName: "Linda",
-    lastName: "Park",
-    email: "linda.park82@outlook.com",
-    orderTotal: 80.00,
-    currency: "USD",
-    itemCategories: "Pass",
-    source: "Mobile",
-    createdAt: "2026-02-18T19:10:00.000Z",
-    updatedAt: "2026-02-18T19:10:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    passes: [
-      { passId: "UGFzzNTUwMTkyODNycDJxM3I0NXN0dXYxMjM=", passConfigId: "UGFzc0NvbmZpZzU1MDE5MjgzcnAycTNyNDVzdHV2MTIz", source: "Mobile", reservedSeats: null },
-      { passId: "UGFzzNTUwMTkyODNycDJxM3I0NXN0dXY0NTY=", passConfigId: "UGFzc0NvbmZpZzU1MDE5MjgzcnAycTNyNDVzdHV2NDU2", source: "Mobile", reservedSeats: null }
-    ],
-    transferHistory: []
-  }
-];
-
-// ─── Utilities ───────────────────────────────────────────────────────────────
-const fmt = (isoStr) => {
-  if (!isoStr) return "—";
-  const d = new Date(isoStr);
-  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
+// ─── Formatting helpers ───────────────────────────────────────────────────────
+const fmtDateTime = (iso) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+    hour: "numeric", minute: "2-digit", hour12: true,
+  });
 };
-
-const fmtDate = (isoStr) => {
-  if (!isoStr) return "—";
-  return isoStr.split("T")[0];
+const fmtDateShort = (iso) => {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric",
+  });
+};
+const fmtEventDate = (start, end) => {
+  if (!start) return "—";
+  if (!end) return fmtDateShort(start);
+  return `${fmtDateShort(start)} – ${fmtDateShort(end)}`;
 };
 
 const copyToClipboard = (text) => {
@@ -160,17 +55,299 @@ const copyToClipboard = (text) => {
   });
 };
 
-// ─── Small components ─────────────────────────────────────────────────────────
+// ─── Mock Data ────────────────────────────────────────────────────────────────
+const MOCK_ORDERS = [
+  {
+    orderNumber: "gh4b4t24mxqe",
+    id: "VGlja2V0R3JvdXA2ODdlNzFhMzYzMjEyOGExYzYwYjI1ZTk=",
+    userId: "26806767",
+    firstName: "Janet", lastName: "Jones", email: "rjjfriday@aol.com",
+    orderTotal: 80.00, currency: "USD",
+    itemCategories: "Pass", source: "Mobile",
+    createdAt: "2025-07-21T16:58:11.452Z",
+    updatedAt: "2025-08-27T22:22:22.270Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Pittsburg State Athletics",
+    eventName: "2025–26 Varsity Basketball Season Pass",
+    eventDate: "2025-11-01T19:00:00.000Z",
+    eventDateEnd: "2026-03-15T00:00:00.000Z",
+    eventStatus: "In Progress",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlNw==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null, revoked: false },
+      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlOA==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "ab1c2d34efgh",
+    id: "VGlja2V0R3JvdXBhYjFjMmQzNGVmZ2gxMjM0NTY3ODk=",
+    userId: "19283746",
+    firstName: "Michael", lastName: "Torres", email: "mtorres@gmail.com",
+    orderTotal: 10.60, currency: "USD",
+    itemCategories: "Single Game", source: "Web",
+    createdAt: "2026-01-15T20:30:00.000Z",
+    updatedAt: "2026-01-15T21:05:33.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Northeastern State University",
+    eventName: "Women's Volleyball: NSU vs. Washburn",
+    eventDate: "2026-01-16T18:00:00.000Z",
+    eventDateEnd: null,
+    eventStatus: "Past",
+    status: "Refunded", accessRevoked: true,
+    passes: [
+      { passId: "UGFzczE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", passConfigId: "UGFzc0NvbmZpZzE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", source: "Web", reservedSeats: null, revoked: true },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "xy9z8w76vuqr",
+    id: "VGlja2V0R3JvdXB4eTl6OHc3NnZ1cXIxMjM0NTY3ODk=",
+    userId: "38475610",
+    firstName: "Sarah", lastName: "Mitchell", email: "sarah.m@yahoo.com",
+    orderTotal: 42.00, currency: "USD",
+    itemCategories: "Season Pass", source: "Mobile",
+    createdAt: "2025-09-01T14:00:00.000Z",
+    updatedAt: "2025-11-10T18:00:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Central Missouri Athletics",
+    eventName: "2025–26 Women's Basketball Season Pass",
+    eventDate: "2025-10-15T19:00:00.000Z",
+    eventDateEnd: "2026-03-10T00:00:00.000Z",
+    eventStatus: "In Progress",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", source: "Mobile", reservedSeats: null, revoked: false },
+      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", source: "Mobile", reservedSeats: "Row C, Seat 12", revoked: false },
+    ],
+    transferHistory: [
+      { date: "2025-10-15T09:00:00.000Z", from: "sarah.m@yahoo.com", to: "mark.mitchell@gmail.com", passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", action: "Transfer" },
+    ],
+  },
+  {
+    orderNumber: "mn5p6q78rstu",
+    id: "VGlja2V0R3JvdXBtbjVwNnE3OHJzdHUxMjM0NTY3ODk=",
+    userId: "47382910",
+    firstName: "David", lastName: "Chen", email: "dchen@hotmail.com",
+    orderTotal: 14.99, currency: "USD",
+    itemCategories: "Single Game", source: "Web",
+    createdAt: "2026-02-10T11:00:00.000Z",
+    updatedAt: "2026-02-10T11:00:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Glenburn High School",
+    eventName: "Varsity Football: Glenburn vs. Tioga",
+    eventDate: "2026-02-10T19:30:00.000Z",
+    eventDateEnd: null,
+    eventStatus: "Past",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzczQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", passConfigId: "UGFzc0NvbmZpZzQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", source: "Web", reservedSeats: "Section B, Row 4, Seat 7", revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "rp2q3r45stuv",
+    id: "VGlja2V0R3JvdXBycDJxM3I0NXN0dXYxMjM0NTY3ODk=",
+    userId: "55019283",
+    firstName: "Linda", lastName: "Park", email: "linda.park82@outlook.com",
+    orderTotal: 80.00, currency: "USD",
+    itemCategories: "Pass", source: "Mobile",
+    createdAt: "2026-02-18T19:10:00.000Z",
+    updatedAt: "2026-02-18T19:10:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "University of Central Oklahoma",
+    eventName: "2026 Spring Track & Field Season Pass",
+    eventDate: "2026-03-05T10:00:00.000Z",
+    eventDateEnd: "2026-05-20T00:00:00.000Z",
+    eventStatus: "Upcoming",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzNTUwMTkyODNycDJxM3I0NXN0dXYxMjM=", passConfigId: "UGFzc0NvbmZpZzU1MDE5MjgzcnAycTNyNDVzdHV2MTIz", source: "Mobile", reservedSeats: null, revoked: false },
+      { passId: "UGFzzNTUwMTkyODNycDJxM3I0NXN0dXY0NTY=", passConfigId: "UGFzc0NvbmZpZzU1MDE5MjgzcnAycTNyNDVzdHV2NDU2", source: "Mobile", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "jk7l8m90nopq",
+    id: "VGlja2V0R3JvdXBqazdsMG05MG5vcHExMjM0NTY3ODk=",
+    userId: "60192837",
+    firstName: "Marcus", lastName: "Williams", email: "mwilliams44@gmail.com",
+    orderTotal: 10.60, currency: "USD",
+    itemCategories: "Single Game", source: "Mobile",
+    createdAt: "2026-02-19T17:45:00.000Z",
+    updatedAt: "2026-02-19T17:45:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Pittsburg State Athletics",
+    eventName: "Men's Basketball: PSU vs. Emporia State",
+    eventDate: "2026-02-20T19:00:00.000Z",
+    eventDateEnd: null,
+    eventStatus: "In Progress",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzNjAxOTI4MzdqazdsMG05MG5vcHExMjM=", passConfigId: "UGFzc0NvbmZpZzYwMTkyODM3amsdOG05MG5vcHExMjM=", source: "Mobile", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "ef5g6h78ijkl",
+    id: "VGlja2V0R3JvdXBlZjVnNmg3OGlqa2wxMjM0NTY3ODk=",
+    userId: "71829304",
+    firstName: "Brittany", lastName: "Adams", email: "brittany.adams@icloud.com",
+    orderTotal: 55.00, currency: "USD",
+    itemCategories: "Season Pass", source: "Web",
+    createdAt: "2025-08-15T09:20:00.000Z",
+    updatedAt: "2025-08-15T09:20:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Northeastern State University",
+    eventName: "2025–26 Volleyball Season Pass",
+    eventDate: "2025-08-28T18:00:00.000Z",
+    eventDateEnd: "2026-01-10T00:00:00.000Z",
+    eventStatus: "Past",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzNzE4MjkzMDRlZjVnNmg3OGlqa2wxMjM=", passConfigId: "UGFzc0NvbmZpZzc4MTkyODMwNGVmNWc2aDc4aWprbDEyMw==", source: "Web", reservedSeats: "Section A, Row 1, Seat 3", revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "wx3y4z56abcd",
+    id: "VGlja2V0R3JvdXB3eDN5NHo1NmFiY2QxMjM0NTY3ODk=",
+    userId: "82930415",
+    firstName: "Jennifer", lastName: "Olsen", email: "jolsen@westriv.com",
+    orderTotal: 35.00, currency: "USD",
+    itemCategories: "Tournament Pass", source: "Mobile",
+    createdAt: "2026-01-28T13:00:00.000Z",
+    updatedAt: "2026-01-28T13:00:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "MIAA Conference",
+    eventName: "MIAA Wrestling Regional Championships",
+    eventDate: "2026-02-14T09:00:00.000Z",
+    eventDateEnd: "2026-02-15T18:00:00.000Z",
+    eventStatus: "Past",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzODI5MzA0MTV3eDN5NHo1NmFiY2QxMjM=", passConfigId: "UGFzc0NvbmZpZzo4MjkzMDQxNXd4M3k0ejU2YWJjZDEyMw==", source: "Mobile", reservedSeats: null, revoked: false },
+      { passId: "UGFzzODI5MzA0MTV3eDN5NHo1NmFiY2Q0NTY=", passConfigId: "UGFzc0NvbmZpZzo4MjkzMDQxNXd4M3k0ejU2YWJjZDQ1Ng==", source: "Mobile", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "cd9e0f12ghij",
+    id: "VGlja2V0R3JvdXBjZDllMGYxMmdoaWoxMjM0NTY3ODk=",
+    userId: "93041526",
+    firstName: "Carlos", lastName: "Mendez", email: "cmendez@yahoo.com",
+    orderTotal: 12.00, currency: "USD",
+    itemCategories: "Single Game", source: "Web",
+    createdAt: "2026-02-17T20:15:00.000Z",
+    updatedAt: "2026-02-17T20:15:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Northside High School",
+    eventName: "Varsity Girls Soccer: Northside vs. Riverside",
+    eventDate: "2026-02-17T18:00:00.000Z",
+    eventDateEnd: null,
+    eventStatus: "Past",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzOTMwNDE1MjZjZDllMGYxMmdoaWoxMjM=", passConfigId: "UGFzc0NvbmZpZzo5MzA0MTUyNmNkOWUwZjEyZ2hpajEyMw==", source: "Web", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "kl1m2n34opqr",
+    id: "VGlja2V0R3JvdXBrbDFtMm4zNG9wcXIxMjM0NTY3ODk=",
+    userId: "10415263",
+    firstName: "Emily", lastName: "Zhang", email: "emily.zhang@gmail.com",
+    orderTotal: 42.00, currency: "USD",
+    itemCategories: "Season Pass", source: "Mobile",
+    createdAt: "2025-11-01T08:30:00.000Z",
+    updatedAt: "2026-01-20T12:00:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Pittsburg State Athletics",
+    eventName: "2025–26 Men's Basketball Season Pass",
+    eventDate: "2025-11-01T19:00:00.000Z",
+    eventDateEnd: "2026-03-15T00:00:00.000Z",
+    eventStatus: "In Progress",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzMTA0MTUyNjNrbDFtMm4zNG9wcXIxMjM=", passConfigId: "UGFzc0NvbmZpZzoxMDQxNTI2M2tsMW0ybjM0b3BxcjEyMw==", source: "Mobile", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "st7u8v90wxyz",
+    id: "VGlja2V0R3JvdXBzdDd1OHY5MHd4eXoxMjM0NTY3ODk=",
+    userId: "11526374",
+    firstName: "Tyler", lastName: "Brooks", email: "tbrooks_09@hotmail.com",
+    orderTotal: 10.60, currency: "USD",
+    itemCategories: "Single Game", source: "Web",
+    createdAt: "2025-09-10T15:00:00.000Z",
+    updatedAt: "2025-09-10T15:00:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "Glenburn High School",
+    eventName: "Varsity Football: Glenburn vs. Bowman County",
+    eventDate: "2025-09-12T19:00:00.000Z",
+    eventDateEnd: null,
+    eventStatus: "Past",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzMTE1MjYzNzRzdDd1OHY5MHd4eXoxMjM=", passConfigId: "UGFzc0NvbmZpZzoxMTUyNjM3NHN0N3U4djkwd3h5ejEyMw==", source: "Web", reservedSeats: null, revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "am8b9c01defg",
+    id: "VGlja2V0R3JvdXBhbThiOWMwMWRlZmcxMjM0NTY3ODk=",
+    userId: "12637485",
+    firstName: "Amanda", lastName: "Foster", email: "afoster@outlook.com",
+    orderTotal: 80.00, currency: "USD",
+    itemCategories: "Pass", source: "Mobile",
+    createdAt: "2026-02-20T08:05:00.000Z",
+    updatedAt: "2026-02-20T08:05:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "University of Central Oklahoma",
+    eventName: "2026 Spring Baseball Season Pass",
+    eventDate: "2026-03-10T13:00:00.000Z",
+    eventDateEnd: "2026-05-30T00:00:00.000Z",
+    eventStatus: "Upcoming",
+    status: "Active", accessRevoked: false,
+    passes: [
+      { passId: "UGFzzMTI2Mzc0ODVhbThiOWMwMWRlZmcxMjM=", passConfigId: "UGFzc0NvbmZpZzoxMjYzNzQ4NWFtOGI5YzAxZGVmZzEyMw==", source: "Mobile", reservedSeats: null, revoked: false },
+      { passId: "UGFzzMTI2Mzc0ODVhbThiOWMwMWRlZmc0NTY=", passConfigId: "UGFzc0NvbmZpZzoxMjYzNzQ4NWFtOGI5YzAxZGVmZzQ1Ng==", source: "Mobile", reservedSeats: "Section C, Row 2, Seat 14", revoked: false },
+    ],
+    transferHistory: [],
+  },
+  {
+    orderNumber: "hn2o3p45qrst",
+    id: "VGlja2V0R3JvdXBobjJvM3A0NXFyc3QxMjM0NTY3ODk=",
+    userId: "13748596",
+    firstName: "Robert", lastName: "Kim", email: "rkim_fan@gmail.com",
+    orderTotal: 8.00, currency: "USD",
+    itemCategories: "Single Game", source: "Web",
+    createdAt: "2026-02-12T10:30:00.000Z",
+    updatedAt: "2026-02-12T10:30:00.000Z",
+    deletedAt: null, originalTicketGroup: null,
+    organization: "MIAA Conference",
+    eventName: "Regional Wrestling Finals",
+    eventDate: "2026-02-15T09:00:00.000Z",
+    eventDateEnd: null,
+    eventStatus: "Past",
+    status: "Refunded", accessRevoked: true,
+    passes: [
+      { passId: "UGFzzMTM3NDg1OTZobjJvM3A0NXFyc3QxMjM=", passConfigId: "UGFzc0NvbmZpZzoxMzc0ODU5NmhuMm8zcDQ1cXJzdDEyMw==", source: "Web", reservedSeats: null, revoked: true },
+    ],
+    transferHistory: [],
+  },
+];
+
+// Sort newest first
+const SORTED_ORDERS = [...MOCK_ORDERS].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+// ─── Small reusable components ────────────────────────────────────────────────
 const CopyBtn = ({ text }) => {
   const [copied, setCopied] = useState(false);
-  const handle = () => {
-    copyToClipboard(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
-  };
   return (
     <button
-      onClick={handle}
+      onClick={() => { copyToClipboard(text); setCopied(true); setTimeout(() => setCopied(false), 1600); }}
       className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border transition whitespace-nowrap
         ${copied ? "border-green-600 text-green-400" : "border-slate-600 text-slate-500 hover:border-orange-500 hover:text-orange-400"}`}
     >
@@ -181,20 +358,31 @@ const CopyBtn = ({ text }) => {
 
 const StatusPill = ({ status }) => {
   const map = {
-    Active:     "bg-green-900/30 text-green-400 border-green-800",
-    Refunded:   "bg-red-900/30 text-red-400 border-red-900",
-    Transferred:"bg-blue-900/30 text-blue-400 border-blue-800",
-    Cancelled:  "bg-slate-700/30 text-slate-400 border-slate-600",
+    Active:      "bg-green-900/30 text-green-400 border-green-800",
+    Refunded:    "bg-red-900/30 text-red-400 border-red-900",
+    Transferred: "bg-blue-900/30 text-blue-400 border-blue-800",
+    Cancelled:   "bg-slate-700/30 text-slate-400 border-slate-600",
   };
+  return <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${map[status] || map.Active}`}>{status}</span>;
+};
+
+const EventStatusPill = ({ status }) => {
+  const map = {
+    "Upcoming":    "bg-blue-900/30 text-blue-300 border-blue-700",
+    "In Progress": "bg-green-900/30 text-green-300 border-green-700",
+    "Cancelled":   "bg-red-900/30 text-red-300 border-red-800",
+    "Past":        "bg-slate-700/30 text-slate-400 border-slate-600",
+  };
+  const icons = { "Upcoming": "🗓️", "In Progress": "🔴", "Cancelled": "✗", "Past": "✓" };
   return (
-    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${map[status] || map.Active}`}>
-      {status}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold border ${map[status] || map["Past"]}`}>
+      {icons[status]} {status}
     </span>
   );
 };
 
 const Toast = ({ msg, type }) => (
-  <div className={`fixed top-5 right-5 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl flex items-center gap-2 animate-pulse
+  <div className={`fixed top-5 right-5 z-50 px-5 py-3 rounded-xl text-sm font-semibold shadow-2xl flex items-center gap-2
     ${type === "error" ? "bg-red-700 border border-red-500" : "bg-green-700 border border-green-500"}`}>
     {type === "error" ? "✗" : "✓"} {msg}
   </div>
@@ -205,18 +393,7 @@ const RefundModal = ({ order, onClose, onConfirm }) => {
   const [reason, setReason] = useState("customer_request");
   const [refundType, setRefundType] = useState("full");
   const [partialAmt, setPartialAmt] = useState("");
-
-  const refundAmount = refundType === "full"
-    ? `$${order.orderTotal.toFixed(2)}`
-    : (partialAmt ? `$${parseFloat(partialAmt).toFixed(2)}` : "$0.00");
-
-  const handleConfirm = () => {
-    if (refundType === "partial" && (!partialAmt || parseFloat(partialAmt) <= 0)) {
-      alert("Please enter a valid partial refund amount.");
-      return;
-    }
-    onConfirm({ reason, refundType, amount: refundAmount });
-  };
+  const refundAmount = refundType === "full" ? `$${order.orderTotal.toFixed(2)}` : (partialAmt ? `$${parseFloat(partialAmt).toFixed(2)}` : "$0.00");
 
   return (
     <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
@@ -224,63 +401,40 @@ const RefundModal = ({ order, onClose, onConfirm }) => {
         <div className="flex justify-between items-start mb-5">
           <div>
             <h2 className="text-lg font-black">Process Refund</h2>
-            <p className="text-slate-400 text-xs mt-1">
-              Order <span className="font-mono text-orange-400">{order.orderNumber}</span> — {order.firstName} {order.lastName}
-            </p>
+            <p className="text-slate-400 text-xs mt-1">Order <span className="font-mono text-orange-400">{order.orderNumber}</span> — {order.firstName} {order.lastName}</p>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold">×</button>
         </div>
-
-        {/* Order Summary */}
         <div className="bg-slate-900 rounded-xl p-4 mb-5 space-y-2 text-sm border border-slate-700">
-          <div className="flex justify-between"><span className="text-slate-400">Order Total</span><span className="font-bold">${order.orderTotal.toFixed(2)}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Event</span><span className="text-right text-xs max-w-48 leading-tight">{order.eventName}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Amount Paid</span><span className="font-bold">${order.orderTotal.toFixed(2)}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">Customer</span><span>{order.firstName} {order.lastName}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">Email</span><span className="text-xs">{order.email}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Pass Type</span><span>{order.itemCategories}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">Passes</span><span>{order.passes.length}</span></div>
         </div>
-
-        {/* Refund Type */}
         <div className="mb-4">
           <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Refund Type</label>
           <div className="flex gap-3">
-            <button
-              onClick={() => setRefundType("full")}
-              className={`flex-1 py-2 rounded-lg text-sm font-bold border transition ${refundType === "full" ? "border-orange-500 text-orange-400 bg-orange-900/20" : "border-slate-600 text-slate-400 hover:border-slate-400"}`}
-            >
-              Full Refund
-            </button>
-            <button
-              onClick={() => setRefundType("partial")}
-              className={`flex-1 py-2 rounded-lg text-sm font-bold border transition ${refundType === "partial" ? "border-orange-500 text-orange-400 bg-orange-900/20" : "border-slate-600 text-slate-400 hover:border-slate-400"}`}
-            >
-              Partial Refund
-            </button>
+            {["full","partial"].map(t => (
+              <button key={t} onClick={() => setRefundType(t)}
+                className={`flex-1 py-2 rounded-lg text-sm font-bold border transition ${refundType === t ? "border-orange-500 text-orange-400 bg-orange-900/20" : "border-slate-600 text-slate-400 hover:border-slate-400"}`}>
+                {t === "full" ? "Full Refund" : "Partial Refund"}
+              </button>
+            ))}
           </div>
         </div>
-
         {refundType === "partial" && (
           <div className="mb-4">
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Refund Amount (USD)</label>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Amount (USD)</label>
             <div className="relative">
               <span className="absolute left-3 top-3 text-slate-400">$</span>
-              <input
-                type="number"
-                value={partialAmt}
-                onChange={e => setPartialAmt(e.target.value)}
-                max={order.orderTotal}
-                step="0.01"
-                placeholder="0.00"
-                className="w-full pl-7 pr-4 py-2.5 rounded-lg text-sm focus:border-orange-500 transition"
-              />
+              <input type="number" value={partialAmt} onChange={e => setPartialAmt(e.target.value)} max={order.orderTotal} step="0.01" placeholder="0.00" className="w-full pl-7 pr-4 py-2.5 rounded-lg text-sm" />
             </div>
           </div>
         )}
-
-        {/* Reason */}
         <div className="mb-5">
           <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Reason</label>
-          <select value={reason} onChange={e => setReason(e.target.value)} className="w-full p-3 rounded-lg text-sm focus:border-orange-500 transition">
+          <select value={reason} onChange={e => setReason(e.target.value)} className="w-full p-3 rounded-lg text-sm">
             <option value="customer_request">Customer Request</option>
             <option value="event_cancelled">Event Cancelled</option>
             <option value="technical_issue">Technical Issue / Stream Failure</option>
@@ -289,16 +443,15 @@ const RefundModal = ({ order, onClose, onConfirm }) => {
             <option value="other">Other</option>
           </select>
         </div>
-
         <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 mb-5 text-xs text-red-300 leading-relaxed">
-          ⚠️ Confirming will immediately revoke the fan's access and initiate a refund of <strong>{refundAmount}</strong> to their original payment method.
+          ⚠️ This will immediately revoke the fan's access and initiate a refund of <strong>{refundAmount}</strong> to their original payment method.
         </div>
-
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white font-bold text-sm transition">Cancel</button>
-          <button onClick={handleConfirm} className="flex-1 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-sm transition">
-            Confirm Refund
-          </button>
+          <button onClick={() => {
+            if (refundType === "partial" && (!partialAmt || parseFloat(partialAmt) <= 0)) { alert("Please enter a valid amount."); return; }
+            onConfirm({ reason, refundType, amount: refundAmount });
+          }} className="flex-1 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-sm transition">Confirm Refund</button>
         </div>
       </div>
     </div>
@@ -311,12 +464,7 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
   const [confirmEmail, setConfirmEmail] = useState("");
   const [selectedPass, setSelectedPass] = useState("all");
   const [note, setNote] = useState("");
-
-  const handle = () => {
-    if (!newEmail) { alert("Please enter a recipient email address."); return; }
-    if (newEmail !== confirmEmail) { alert("Email addresses do not match."); return; }
-    onConfirm({ newEmail, selectedPass, note });
-  };
+  const emailMismatch = confirmEmail && newEmail !== confirmEmail;
 
   return (
     <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
@@ -324,70 +472,97 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
         <div className="flex justify-between items-start mb-5">
           <div>
             <h2 className="text-lg font-black">Transfer Ticket / Pass</h2>
-            <p className="text-slate-400 text-xs mt-1">
-              From <span className="text-white font-semibold">{order.firstName} {order.lastName}</span> ({order.email})
-            </p>
+            <p className="text-slate-400 text-xs mt-1">From <span className="text-white font-semibold">{order.firstName} {order.lastName}</span> ({order.email})</p>
           </div>
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold leading-none">×</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold">×</button>
         </div>
-
         <div className="mb-4">
           <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Pass to Transfer</label>
-          <select value={selectedPass} onChange={e => setSelectedPass(e.target.value)} className="w-full p-3 rounded-lg text-sm focus:border-orange-500 transition">
-            <option value="all">All Passes in this Order ({order.passes.length})</option>
+          <select value={selectedPass} onChange={e => setSelectedPass(e.target.value)} className="w-full p-3 rounded-lg text-sm">
+            <option value="all">All passes in this order ({order.passes.length})</option>
             {order.passes.map(p => (
-              <option key={p.passId} value={p.passId}>
-                {p.passId.substring(0, 28)}… {p.reservedSeats ? `(${p.reservedSeats})` : ""}
-              </option>
+              <option key={p.passId} value={p.passId}>{p.passId.substring(0, 28)}… {p.reservedSeats ? `(${p.reservedSeats})` : ""}</option>
             ))}
           </select>
         </div>
-
         <div className="mb-4">
           <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Recipient Email</label>
-          <input
-            type="email"
-            value={newEmail}
-            onChange={e => setNewEmail(e.target.value)}
-            placeholder="recipient@example.com"
-            className="w-full p-3 rounded-lg text-sm focus:border-orange-500 transition"
-          />
+          <input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="recipient@example.com" className="w-full p-3 rounded-lg text-sm" />
         </div>
-
         <div className="mb-4">
           <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Confirm Recipient Email</label>
-          <input
-            type="email"
-            value={confirmEmail}
-            onChange={e => setConfirmEmail(e.target.value)}
-            placeholder="re-enter email to confirm"
-            className={`w-full p-3 rounded-lg text-sm transition
-              ${confirmEmail && newEmail !== confirmEmail ? "border-red-600" : "focus:border-orange-500"}`}
-          />
-          {confirmEmail && newEmail !== confirmEmail && (
-            <p className="text-red-400 text-xs mt-1">Email addresses do not match.</p>
-          )}
+          <input type="email" value={confirmEmail} onChange={e => setConfirmEmail(e.target.value)} placeholder="re-enter to confirm"
+            className={`w-full p-3 rounded-lg text-sm ${emailMismatch ? "border-red-600" : ""}`} />
+          {emailMismatch && <p className="text-red-400 text-xs mt-1">Email addresses do not match.</p>}
         </div>
-
         <div className="mb-5">
           <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Internal Note (Optional)</label>
-          <textarea
-            value={note}
-            onChange={e => setNote(e.target.value)}
-            rows={2}
-            placeholder="e.g. Fan requested transfer to family member"
-            className="w-full p-3 rounded-lg text-sm focus:border-orange-500 transition resize-none"
-          />
+          <textarea value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="e.g. Fan requested transfer to family member" className="w-full p-3 rounded-lg text-sm resize-none" />
+        </div>
+        <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3 mb-5 text-xs text-blue-300 leading-relaxed">
+          ✉️ The recipient will get a confirmation email. The original owner's access will be revoked.
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white font-bold text-sm transition">Cancel</button>
+          <button onClick={() => {
+            if (!newEmail) { alert("Please enter a recipient email."); return; }
+            if (newEmail !== confirmEmail) { alert("Email addresses do not match."); return; }
+            onConfirm({ newEmail, selectedPass, note });
+          }} className="flex-1 py-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm transition">Transfer Pass</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Revoke Access Modal ──────────────────────────────────────────────────────
+const RevokeModal = ({ order, onClose, onConfirm }) => {
+  const hasReservedSeats = order.passes.some(p => p.reservedSeats && !p.revoked);
+  const reservedSeatList = order.passes.filter(p => p.reservedSeats && !p.revoked).map(p => p.reservedSeats).join(", ");
+  const [freeSeats, setFreeSeats] = useState(false);
+
+  return (
+    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-800 border border-slate-600 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <div className="flex justify-between items-start mb-5">
+          <div>
+            <h2 className="text-lg font-black">Revoke Access</h2>
+            <p className="text-slate-400 text-xs mt-1">Order <span className="font-mono text-orange-400">{order.orderNumber}</span> — {order.firstName} {order.lastName}</p>
+          </div>
+          <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold">×</button>
         </div>
 
-        <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3 mb-5 text-xs text-blue-300 leading-relaxed">
-          ✉️ The recipient will receive a confirmation email with instructions to access their transferred pass. The original owner's access will be revoked.
+        <div className="bg-slate-900 rounded-xl p-4 mb-5 space-y-2 text-sm border border-slate-700">
+          <div className="flex justify-between"><span className="text-slate-400">Event</span><span className="text-right text-xs max-w-48 leading-tight">{order.eventName}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Organization</span><span className="text-xs">{order.organization}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Customer</span><span>{order.firstName} {order.lastName}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Passes</span><span>{order.passes.filter(p => !p.revoked).length} active</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Amount Paid</span><span className="font-bold">${order.orderTotal.toFixed(2)}</span></div>
+        </div>
+
+        {hasReservedSeats && (
+          <label className="flex items-start gap-3 mb-5 p-4 bg-amber-900/10 border border-amber-700/40 rounded-xl cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={freeSeats}
+              onChange={e => setFreeSeats(e.target.checked)}
+              className="mt-0.5 w-4 h-4 accent-amber-500 cursor-pointer"
+            />
+            <div>
+              <p className="text-sm font-bold text-amber-300 group-hover:text-amber-200 transition">Also release reserved seats</p>
+              <p className="text-xs text-slate-400 mt-0.5">{reservedSeatList} — makes these seats available for re-sale</p>
+            </div>
+          </label>
+        )}
+
+        <div className="bg-amber-900/20 border border-amber-700 rounded-lg p-3 mb-5 text-xs text-amber-300 leading-relaxed">
+          🚫 This will immediately prevent the fan from accessing this event. <strong>No refund will be issued</strong> unless you process one separately.
         </div>
 
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white font-bold text-sm transition">Cancel</button>
-          <button onClick={handle} className="flex-1 py-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm transition">
-            Transfer Pass
+          <button onClick={() => onConfirm({ freeSeats })} className="flex-1 py-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm transition">
+            Confirm — Revoke Access
           </button>
         </div>
       </div>
@@ -398,8 +573,9 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
 // ─── Order Detail View ────────────────────────────────────────────────────────
 const OrderDetail = ({ order: initial, onBack }) => {
   const [order, setOrder] = useState(initial);
-  const [showRefund, setShowRefund] = useState(false);
+  const [showRefund, setShowRefund]     = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
+  const [showRevoke, setShowRevoke]     = useState(false);
   const [toast, setToast] = useState(null);
 
   const notify = (msg, type = "success") => {
@@ -408,52 +584,42 @@ const OrderDetail = ({ order: initial, onBack }) => {
   };
 
   const handleRefund = ({ reason, refundType, amount }) => {
-    setOrder(o => ({ ...o, status: "Refunded" }));
+    setOrder(o => ({ ...o, status: "Refunded", accessRevoked: true, passes: o.passes.map(p => ({ ...p, revoked: true })) }));
     setShowRefund(false);
     notify(`${refundType === "full" ? "Full" : "Partial"} refund of ${amount} processed. Reason: ${reason.replace(/_/g, " ")}.`);
   };
 
   const handleTransfer = ({ newEmail, selectedPass, note }) => {
-    const entry = {
-      date: new Date().toISOString(),
-      from: order.email,
-      to: newEmail,
-      passId: selectedPass === "all" ? `All passes (${order.passes.length})` : selectedPass,
-      action: "Transfer",
-      note: note || null,
-    };
+    const entry = { date: new Date().toISOString(), from: order.email, to: newEmail, passId: selectedPass === "all" ? `All passes (${order.passes.length})` : selectedPass, action: "Transfer", note: note || null };
     setOrder(o => ({ ...o, transferHistory: [entry, ...o.transferHistory] }));
     setShowTransfer(false);
     notify(`Pass successfully transferred to ${newEmail}.`);
   };
 
-  const handleResend = () => {
-    notify(`Confirmation email resent to ${order.email}.`);
+  const handleRevoke = ({ freeSeats }) => {
+    setOrder(o => ({
+      ...o,
+      accessRevoked: true,
+      passes: o.passes.map(p => ({
+        ...p,
+        revoked: true,
+        reservedSeats: freeSeats ? null : p.reservedSeats,
+      })),
+    }));
+    setShowRevoke(false);
+    notify(`Access revoked for ${order.firstName} ${order.lastName}.${freeSeats ? " Reserved seats have been released." : ""}`);
   };
 
-  const isRefunded = order.status === "Refunded";
-
-  const rows = [
-    { label: "Id",                   value: order.id },
-    { label: "User Id",              value: order.userId, link: `https://admin.hudl.com/user/${order.userId}` },
-    { label: "First Name",           value: order.firstName },
-    { label: "Last Name",            value: order.lastName },
-    { label: "Email",                value: order.email },
-    { label: "Order Total",          value: `$${order.orderTotal.toFixed(2)}` },
-    { label: "Currency",             value: order.currency },
-    { label: "Item Categories",      value: order.itemCategories },
-    { label: "Created At",           value: order.createdAt },
-    { label: "Updated At",           value: order.updatedAt },
-    { label: "Deleted At",           value: order.deletedAt || "—" },
-    { label: "Source",               value: order.source },
-    { label: "Original Ticket Group",value: order.originalTicketGroup || "N/A" },
-  ];
+  const isRefunded   = order.status === "Refunded";
+  const allRevoked   = order.accessRevoked || order.passes.every(p => p.revoked);
+  const canActOnPass = !isRefunded && !allRevoked;
 
   return (
     <div>
       {toast && <Toast msg={toast.msg} type={toast.type} />}
       {showRefund   && <RefundModal   order={order} onClose={() => setShowRefund(false)}   onConfirm={handleRefund} />}
       {showTransfer && <TransferModal order={order} onClose={() => setShowTransfer(false)} onConfirm={handleTransfer} />}
+      {showRevoke   && <RevokeModal   order={order} onClose={() => setShowRevoke(false)}   onConfirm={handleRevoke} />}
 
       {/* Breadcrumb */}
       <nav className="text-xs text-slate-500 mb-5 flex gap-1.5 items-center flex-wrap">
@@ -464,112 +630,182 @@ const OrderDetail = ({ order: initial, onBack }) => {
         <span className="text-slate-300">{order.firstName} {order.lastName}</span>
       </nav>
 
-      {/* Header row */}
+      {/* Page header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-black flex flex-wrap items-center gap-3">
             {order.firstName} {order.lastName}
             <StatusPill status={order.status} />
+            {allRevoked && !isRefunded && (
+              <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase border bg-amber-900/30 text-amber-400 border-amber-700">Access Revoked</span>
+            )}
           </h2>
-          <p className="text-slate-400 text-xs mt-1 font-mono">
-            Order # <span className="text-orange-400">{order.orderNumber}</span>
-            &nbsp;·&nbsp;{order.email}
-            &nbsp;·&nbsp;{order.itemCategories}
-            &nbsp;·&nbsp;<span className="font-bold text-slate-200">${order.orderTotal.toFixed(2)}</span>
+          <p className="text-slate-400 text-xs mt-1">
+            <span className="font-mono text-orange-400">{order.orderNumber}</span>
+            &ensp;·&ensp;{order.email}
+            &ensp;·&ensp;{order.organization}
           </p>
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={handleResend}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 text-sm font-bold transition"
-          >
+        <div className="flex gap-2 flex-wrap items-center">
+          <button onClick={() => notify(`Confirmation email resent to ${order.email}.`)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 text-sm font-bold transition">
             ✉️ Resend Email
           </button>
-          {!isRefunded && (
+          {canActOnPass && (
             <>
-              <button
-                onClick={() => setShowTransfer(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-700 text-blue-400 hover:bg-blue-900/20 text-sm font-bold transition"
-              >
+              <button onClick={() => setShowTransfer(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-700 text-blue-400 hover:bg-blue-900/20 text-sm font-bold transition">
                 ↗ Transfer Pass
               </button>
-              <button
-                onClick={() => setShowRefund(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-700 text-red-400 hover:bg-red-900/20 text-sm font-bold transition"
-              >
+              <button onClick={() => setShowRevoke(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-700 text-amber-400 hover:bg-amber-900/20 text-sm font-bold transition">
+                🚫 Revoke Access
+              </button>
+              <button onClick={() => setShowRefund(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-700 text-red-400 hover:bg-red-900/20 text-sm font-bold transition">
                 ↩ Process Refund
               </button>
             </>
           )}
-          {isRefunded && (
+          {(isRefunded || allRevoked) && !canActOnPass && (
             <span className="px-4 py-2 rounded-lg border border-slate-700 text-slate-600 text-sm font-bold italic">
-              Order Refunded — no further actions
+              {isRefunded ? "Order refunded — no further actions" : "Access revoked — refund can still be processed"}
             </span>
+          )}
+          {allRevoked && !isRefunded && (
+            <button onClick={() => setShowRefund(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-700 text-red-400 hover:bg-red-900/20 text-sm font-bold transition">
+              ↩ Process Refund
+            </button>
           )}
         </div>
       </div>
 
-      {/* Two-column content */}
+      {/* Content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* Order Details Table */}
-        <div className="card rounded-xl overflow-hidden">
-          <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Order Details</h3>
+        {/* ── LEFT COLUMN ── */}
+        <div className="space-y-5">
+
+          {/* Event Info */}
+          <div className="card rounded-xl overflow-hidden">
+            <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Event Information</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">Organization</p>
+                <p className="font-semibold text-slate-200">{order.organization}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">Event / Pass</p>
+                <p className="font-semibold text-slate-200">{order.eventName}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-0.5">Date</p>
+                  <p className="text-sm text-slate-300">{fmtEventDate(order.eventDate, order.eventDateEnd)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1">Event Status</p>
+                  <EventStatusPill status={order.eventStatus} />
+                </div>
+              </div>
+            </div>
           </div>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-slate-800/40 text-slate-500 uppercase text-[9px] font-black tracking-wider border-b border-slate-700/50">
-                <th className="px-4 py-2 text-left w-40">Property</th>
-                <th className="px-4 py-2 text-left">Value</th>
-                <th className="px-4 py-2 w-16"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/60">
-              {rows.map(r => (
-                <tr key={r.label}>
-                  <td className="px-4 py-2 font-bold text-slate-300 whitespace-nowrap">{r.label}</td>
-                  <td className="px-4 py-2 text-slate-400 break-all">
-                    {r.link
-                      ? <a href={r.link} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{r.value}</a>
-                      : r.value}
-                  </td>
-                  <td className="px-4 py-2 text-right"><CopyBtn text={r.value} /></td>
+
+          {/* Customer & Order */}
+          <div className="card rounded-xl overflow-hidden">
+            <div className="bg-slate-800 px-4 py-3 border-b border-slate-700">
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Customer & Order</h3>
+            </div>
+            <table className="w-full text-sm">
+              <tbody className="divide-y divide-slate-800/60">
+                {[
+                  { label: "Customer",       value: `${order.firstName} ${order.lastName}` },
+                  { label: "Email",          value: order.email },
+                  { label: "Amount Paid",    value: `$${order.orderTotal.toFixed(2)} ${order.currency}` },
+                  { label: "Pass Type",      value: order.itemCategories },
+                  { label: "Purchased Via",  value: order.source },
+                  { label: "Purchased On",   value: fmtDateTime(order.createdAt) },
+                  { label: "Last Updated",   value: fmtDateTime(order.updatedAt) },
+                  ...(order.deletedAt ? [{ label: "Deleted On", value: fmtDateTime(order.deletedAt) }] : []),
+                  ...(order.originalTicketGroup ? [{ label: "Original Order", value: order.originalTicketGroup }] : []),
+                ].map(r => (
+                  <tr key={r.label}>
+                    <td className="px-4 py-2.5 text-xs font-bold text-slate-400 w-36 whitespace-nowrap">{r.label}</td>
+                    <td className="px-4 py-2.5 text-xs text-slate-200">{r.value}</td>
+                    <td className="px-4 py-2.5 text-right"><CopyBtn text={r.value} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Technical IDs */}
+          <details className="card rounded-xl overflow-hidden group">
+            <summary className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center cursor-pointer list-none">
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Technical IDs</h3>
+              <span className="text-slate-600 text-xs group-open:rotate-180 transition-transform inline-block">▾</span>
+            </summary>
+            <table className="w-full text-xs">
+              <tbody className="divide-y divide-slate-800/60">
+                <tr>
+                  <td className="px-4 py-2 font-bold text-slate-400 w-32 whitespace-nowrap">Order ID</td>
+                  <td className="px-4 py-2 text-slate-500 font-mono break-all">{order.id}</td>
+                  <td className="px-4 py-2 text-right"><CopyBtn text={order.id} /></td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                <tr>
+                  <td className="px-4 py-2 font-bold text-slate-400 whitespace-nowrap">User ID</td>
+                  <td className="px-4 py-2">
+                    <a href={`https://admin.hudl.com/user/${order.userId}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-mono">{order.userId}</a>
+                  </td>
+                  <td className="px-4 py-2 text-right"><CopyBtn text={order.userId} /></td>
+                </tr>
+                {order.passes.map((p, i) => (
+                  <tr key={p.passId}>
+                    <td className="px-4 py-2 font-bold text-slate-400 whitespace-nowrap">Pass ID {order.passes.length > 1 ? i + 1 : ""}</td>
+                    <td className="px-4 py-2 text-slate-500 font-mono break-all">{p.passId}</td>
+                    <td className="px-4 py-2 text-right"><CopyBtn text={p.passId} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </details>
         </div>
 
-        {/* Right column */}
-        <div className="space-y-6">
+        {/* ── RIGHT COLUMN ── */}
+        <div className="space-y-5">
 
-          {/* Associated Passes */}
+          {/* Passes */}
           <div className="card rounded-xl overflow-hidden">
             <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Associated Passes</h3>
-              <span className="text-[9px] font-black text-orange-400 bg-orange-900/20 border border-orange-800 px-2 py-0.5 rounded-full">
-                {order.passes.length}
-              </span>
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Passes on this Order</h3>
+              <span className="text-[9px] font-black text-orange-400 bg-orange-900/20 border border-orange-800 px-2 py-0.5 rounded-full">{order.passes.length}</span>
             </div>
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-800/40 text-slate-500 uppercase text-[9px] font-black tracking-wider border-b border-slate-700/50">
-                  <th className="px-4 py-2 text-left">Pass Id</th>
-                  <th className="px-4 py-2 text-left">Source</th>
+                  <th className="px-4 py-2 text-left">Pass ID</th>
+                  <th className="px-4 py-2 text-left">Purchased Via</th>
                   <th className="px-4 py-2 text-left">Reserved Seats</th>
+                  <th className="px-4 py-2 text-left">Access</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {order.passes.map(p => (
                   <tr key={p.passId}>
-                    <td className="px-4 py-2 font-mono text-blue-400 break-all">
-                      <span title={p.passId}>{p.passId.substring(0, 22)}…</span>
-                    </td>
+                    <td className="px-4 py-2 font-mono text-blue-400" title={p.passId}>{p.passId.substring(0, 18)}…</td>
                     <td className="px-4 py-2 text-slate-400">{p.source}</td>
                     <td className="px-4 py-2 text-slate-400">{p.reservedSeats || "—"}</td>
+                    <td className="px-4 py-2">
+                      {p.revoked
+                        ? <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase border bg-red-900/30 text-red-400 border-red-800">Revoked</span>
+                        : <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase border bg-green-900/30 text-green-400 border-green-800">Active</span>
+                      }
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -583,20 +819,17 @@ const OrderDetail = ({ order: initial, onBack }) => {
             </div>
             <div className="p-4">
               {order.transferHistory.length === 0 ? (
-                <p className="text-slate-600 text-xs italic">No share or transfer history.</p>
+                <p className="text-slate-600 text-xs italic">No transfers on this order.</p>
               ) : (
                 <div className="space-y-3">
                   {order.transferHistory.map((t, i) => (
                     <div key={i} className="bg-slate-900/60 border border-slate-700/50 rounded-lg p-3 text-xs space-y-1">
                       <div className="flex justify-between items-center">
                         <span className="font-black text-blue-400 uppercase tracking-wide">↗ {t.action}</span>
-                        <span className="text-slate-500">{fmt(t.date)}</span>
+                        <span className="text-slate-500">{fmtDateTime(t.date)}</span>
                       </div>
                       <div><span className="text-slate-500">From: </span><span className="text-slate-300">{t.from}</span></div>
                       <div><span className="text-slate-500">To: </span><span className="text-slate-300">{t.to}</span></div>
-                      <div className="text-slate-600 truncate">
-                        Pass: {typeof t.passId === "string" && t.passId.length > 30 ? t.passId.substring(0, 30) + "…" : t.passId}
-                      </div>
                       {t.note && <div className="text-slate-500 italic">Note: {t.note}</div>}
                     </div>
                   ))}
@@ -611,57 +844,41 @@ const OrderDetail = ({ order: initial, onBack }) => {
   );
 };
 
-// ─── Main Search View ─────────────────────────────────────────────────────────
+// ─── Search + Feed View ───────────────────────────────────────────────────────
 const SearchView = ({ orders, onSelectOrder }) => {
-  const [tab, setTab] = useState("order");
-  const [orderInput, setOrderInput] = useState("");
-  const [textInput, setTextInput] = useState("");
-  const [dateInput, setDateInput] = useState("");
-  const [results, setResults] = useState(null);
+  const [query, setQuery]   = useState("");
+  const [dateQ, setDateQ]   = useState("");
 
-  const searchByOrder = () => {
-    const q = orderInput.trim().toLowerCase();
-    if (!q) return;
-    setResults(orders.filter(o => o.orderNumber.toLowerCase() === q));
-  };
-
-  const searchByText = () => {
-    const q = textInput.trim().toLowerCase();
-    const d = dateInput;
-    if (!q && !d) return;
-    setResults(orders.filter(o => {
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return SORTED_ORDERS.filter(o => {
       const matchText = !q
         || o.firstName.toLowerCase().includes(q)
         || o.lastName.toLowerCase().includes(q)
         || `${o.firstName} ${o.lastName}`.toLowerCase().includes(q)
         || o.email.toLowerCase().includes(q)
-        || o.orderNumber.toLowerCase().includes(q);
-      const matchDate = !d || o.createdAt.startsWith(d);
+        || o.orderNumber.toLowerCase().includes(q)
+        || o.eventName.toLowerCase().includes(q)
+        || o.organization.toLowerCase().includes(q);
+      const matchDate = !dateQ || o.createdAt.startsWith(dateQ);
       return matchText && matchDate;
-    }));
-  };
+    });
+  }, [query, dateQ]);
 
-  const onKey = (e, fn) => { if (e.key === "Enter") fn(); };
-
-  const totalOrders   = orders.length;
-  const activeOrders  = orders.filter(o => o.status === "Active").length;
-  const refundedCount = orders.filter(o => o.status === "Refunded").length;
+  const isFiltered   = query.trim() !== "" || dateQ !== "";
+  const totalOrders  = MOCK_ORDERS.length;
+  const activeCount  = MOCK_ORDERS.filter(o => o.status === "Active").length;
+  const refundCount  = MOCK_ORDERS.filter(o => o.status === "Refunded").length;
 
   return (
     <div>
       {/* Header */}
       <div className="flex justify-between items-start mb-8 pb-4 border-b border-slate-700">
         <div>
-          <h1 className="text-2xl font-black tracking-tight">
-            Hudl Tickets <span className="text-orange-500">Lookup</span>
-          </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Search and manage fan ticket purchases — refunds, transfers, and full order details.
-          </p>
+          <h1 className="text-2xl font-black tracking-tight">Hudl Tickets <span className="text-orange-500">Lookup</span></h1>
+          <p className="text-slate-400 text-sm mt-1">Search and manage fan ticket purchases — refunds, transfers, and full order details.</p>
         </div>
-        <a href="index.html" className="text-sm text-slate-400 hover:text-white font-bold transition whitespace-nowrap">
-          ← Back to Menu
-        </a>
+        <a href="index.html" className="text-sm text-slate-400 hover:text-white font-bold transition whitespace-nowrap">← Back to Menu</a>
       </div>
 
       {/* Stats */}
@@ -672,173 +889,121 @@ const SearchView = ({ orders, onSelectOrder }) => {
         </div>
         <div className="card p-5 rounded-xl">
           <div className="text-green-500 text-[10px] font-black uppercase tracking-widest mb-1">Active Passes</div>
-          <div className="text-3xl font-black">{activeOrders}</div>
+          <div className="text-3xl font-black">{activeCount}</div>
         </div>
         <div className="card p-5 rounded-xl">
           <div className="text-red-400 text-[10px] font-black uppercase tracking-widest mb-1">Refunds Issued</div>
-          <div className="text-3xl font-black">{refundedCount}</div>
+          <div className="text-3xl font-black">{refundCount}</div>
         </div>
       </div>
 
-      {/* Search Panel */}
-      <div className="card rounded-t-xl border-b-0">
-        <div className="flex border-b border-slate-700">
-          <button
-            onClick={() => { setTab("order"); setResults(null); }}
-            className={`px-6 py-4 text-sm font-bold transition border-b-2 -mb-px
-              ${tab === "order" ? "border-orange-500 text-orange-400" : "border-transparent text-slate-400 hover:text-white"}`}
-          >
-            🔍 Search by Order Number
-          </button>
-          <button
-            onClick={() => { setTab("text"); setResults(null); }}
-            className={`px-6 py-4 text-sm font-bold transition border-b-2 -mb-px
-              ${tab === "text" ? "border-orange-500 text-orange-400" : "border-transparent text-slate-400 hover:text-white"}`}
-          >
-            👤 Search by Name / Email / Date
-          </button>
-        </div>
-
-        <div className="p-6">
-          {tab === "order" ? (
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-3">
-                Search ticket groups by an order number
-              </p>
-              <div className="flex gap-3 flex-wrap">
-                <input
-                  type="text"
-                  value={orderInput}
-                  onChange={e => setOrderInput(e.target.value)}
-                  onKeyDown={e => onKey(e, searchByOrder)}
-                  placeholder="e.g. gh4b4t24mxqe"
-                  className="flex-1 min-w-48 p-3 rounded-lg text-sm focus:border-orange-500 transition"
-                />
-                <button
-                  onClick={searchByOrder}
-                  className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-lg font-bold text-sm transition shadow-lg shadow-orange-900/20"
-                >
-                  Search by Order Number
-                </button>
-              </div>
-              <p className="text-[10px] text-slate-600 mt-2">
-                Try: <button onClick={() => { setOrderInput("gh4b4t24mxqe"); }} className="text-slate-500 hover:text-orange-400 font-mono transition">gh4b4t24mxqe</button>
-                &nbsp;·&nbsp;
-                <button onClick={() => { setOrderInput("xy9z8w76vuqr"); }} className="text-slate-500 hover:text-orange-400 font-mono transition">xy9z8w76vuqr</button>
-                &nbsp;·&nbsp;
-                <button onClick={() => { setOrderInput("ab1c2d34efgh"); }} className="text-slate-500 hover:text-orange-400 font-mono transition">ab1c2d34efgh</button>
-              </p>
-            </div>
-          ) : (
-            <div>
-              <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-3">
-                Search ticket groups by name, email, or purchase date
-              </p>
-              <div className="flex gap-3 flex-wrap">
-                <input
-                  type="text"
-                  value={textInput}
-                  onChange={e => setTextInput(e.target.value)}
-                  onKeyDown={e => onKey(e, searchByText)}
-                  placeholder="Fan name or email address…"
-                  className="flex-1 min-w-56 p-3 rounded-lg text-sm focus:border-orange-500 transition"
-                />
-                <input
-                  type="date"
-                  value={dateInput}
-                  onChange={e => setDateInput(e.target.value)}
-                  className="p-3 rounded-lg text-sm focus:border-orange-500 transition w-44"
-                />
-                <button
-                  onClick={searchByText}
-                  className="bg-orange-600 hover:bg-orange-500 text-white px-6 py-3 rounded-lg font-bold text-sm transition shadow-lg shadow-orange-900/20"
-                >
-                  Search
-                </button>
-              </div>
-              <p className="text-[10px] text-slate-600 mt-2">
-                Try: <button onClick={() => setTextInput("janet")} className="text-slate-500 hover:text-orange-400 transition">janet</button>
-                &nbsp;·&nbsp;
-                <button onClick={() => setTextInput("gmail.com")} className="text-slate-500 hover:text-orange-400 transition">gmail.com</button>
-                &nbsp;·&nbsp;
-                <button onClick={() => setDateInput("2026-02-10")} className="text-slate-500 hover:text-orange-400 transition">2026-02-10</button>
-              </p>
-            </div>
+      {/* Unified Search */}
+      <div className="card rounded-xl p-5 mb-0 rounded-b-none border-b-0">
+        <div className="flex gap-3 flex-wrap">
+          <div className="relative flex-1 min-w-56">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">🔍</span>
+            <input
+              type="text"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search by name, email, order number, or event…"
+              className="w-full pl-9 pr-4 py-3 rounded-lg text-sm transition"
+            />
+          </div>
+          <input
+            type="date"
+            value={dateQ}
+            onChange={e => setDateQ(e.target.value)}
+            title="Filter by purchase date"
+            className="p-3 rounded-lg text-sm transition w-44"
+          />
+          {(query || dateQ) && (
+            <button
+              onClick={() => { setQuery(""); setDateQ(""); }}
+              className="px-4 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white text-sm font-bold transition"
+            >
+              Clear
+            </button>
           )}
         </div>
       </div>
 
-      {/* Results Table */}
-      {results !== null && (
-        <div className="card rounded-b-xl border-t border-slate-700/50 overflow-hidden">
-          {results.length === 0 ? (
-            <div className="p-10 text-center text-slate-500 text-sm">
-              <div className="text-4xl mb-3">🎟️</div>
-              <p className="font-bold text-slate-400 mb-1">No orders found</p>
-              <p className="text-xs">Double-check the order number or try a different search term.</p>
-            </div>
-          ) : (
-            <>
-              <div className="px-4 py-2 bg-slate-800/30 border-b border-slate-700/50 text-xs text-slate-500">
-                {results.length} result{results.length !== 1 ? "s" : ""} found
-              </div>
-              <table className="w-full text-sm">
-                <thead className="bg-slate-800/50 text-slate-400 uppercase text-[9px] font-black tracking-widest border-b border-slate-700">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Order #</th>
-                    <th className="px-4 py-3 text-left">Fan Name</th>
-                    <th className="px-4 py-3 text-left">Email</th>
-                    <th className="px-4 py-3 text-left">Pass Type</th>
-                    <th className="px-4 py-3 text-left">Total</th>
-                    <th className="px-4 py-3 text-left">Purchased</th>
-                    <th className="px-4 py-3 text-left">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {results.map(o => (
-                    <tr key={o.orderNumber}>
-                      <td className="px-4 py-3 font-mono text-orange-400 text-xs">{o.orderNumber}</td>
-                      <td className="px-4 py-3 font-bold whitespace-nowrap">{o.firstName} {o.lastName}</td>
-                      <td className="px-4 py-3 text-slate-400 text-xs">{o.email}</td>
-                      <td className="px-4 py-3 text-xs text-slate-300">{o.itemCategories}</td>
-                      <td className="px-4 py-3 font-mono font-bold text-xs">${o.orderTotal.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">{fmtDate(o.createdAt)}</td>
-                      <td className="px-4 py-3"><StatusPill status={o.status} /></td>
-                      <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => onSelectOrder(o)}
-                          className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-bold transition"
-                        >
-                          View Details →
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
-          )}
+      {/* Feed / Results Table */}
+      <div className="card rounded-xl rounded-t-none border-t-slate-700/50 overflow-hidden">
+        <div className="px-4 py-2.5 bg-slate-800/40 border-b border-slate-700/50 flex justify-between items-center">
+          <span className="text-xs text-slate-400 font-semibold">
+            {isFiltered
+              ? `${filtered.length} result${filtered.length !== 1 ? "s" : ""} for "${query || fmtDateShort(dateQ)}"`
+              : `Recent Purchases — ${totalOrders} orders`}
+          </span>
+          {!isFiltered && <span className="text-[10px] text-slate-600 uppercase tracking-wider font-bold">Newest first</span>}
         </div>
-      )}
+
+        {filtered.length === 0 ? (
+          <div className="p-10 text-center text-slate-500 text-sm">
+            <div className="text-4xl mb-3">🎟️</div>
+            <p className="font-bold text-slate-400 mb-1">No orders found</p>
+            <p className="text-xs">Try a different name, email, order number, or event name.</p>
+          </div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-slate-800/50 text-slate-400 uppercase text-[9px] font-black tracking-widest border-b border-slate-700">
+              <tr>
+                <th className="px-4 py-3 text-left">Order #</th>
+                <th className="px-4 py-3 text-left">Fan</th>
+                <th className="px-4 py-3 text-left hidden md:table-cell">Event</th>
+                <th className="px-4 py-3 text-left hidden lg:table-cell">Purchased</th>
+                <th className="px-4 py-3 text-left">Amount</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800">
+              {filtered.map(o => (
+                <tr key={o.orderNumber} className="feed-row" onClick={() => onSelectOrder(o)}>
+                  <td className="px-4 py-3 font-mono text-orange-400 text-xs whitespace-nowrap">{o.orderNumber}</td>
+                  <td className="px-4 py-3">
+                    <div className="font-bold text-sm whitespace-nowrap">{o.firstName} {o.lastName}</div>
+                    <div className="text-slate-500 text-xs">{o.email}</div>
+                  </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <div className="text-slate-200 text-xs leading-snug max-w-48 truncate">{o.eventName}</div>
+                    <div className="text-slate-500 text-[10px]">{o.organization}</div>
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-slate-400 text-xs whitespace-nowrap">{fmtDateShort(o.createdAt)}</td>
+                  <td className="px-4 py-3 font-mono font-bold text-xs whitespace-nowrap">${o.orderTotal.toFixed(2)}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex flex-col gap-1">
+                      <StatusPill status={o.status} />
+                      {o.accessRevoked && o.status !== "Refunded" && (
+                        <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase border bg-amber-900/30 text-amber-400 border-amber-700">Revoked</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button onClick={e => { e.stopPropagation(); onSelectOrder(o); }}
+                      className="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-xs font-bold transition whitespace-nowrap">
+                      View →
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   );
 };
 
 // ─── App Root ─────────────────────────────────────────────────────────────────
 const App = () => {
-  const [orders, setOrders] = useState(MOCK_ORDERS);
   const [selected, setSelected] = useState(null);
-
-  // Keep the search view's order list in sync when an order detail mutates it
-  const handleSelectOrder = (order) => setSelected(order);
-  const handleBack = () => setSelected(null);
-
   return (
     <div className="p-6 sm:p-8 max-w-6xl mx-auto">
       {selected
-        ? <OrderDetail order={selected} onBack={handleBack} />
-        : <SearchView orders={orders} onSelectOrder={handleSelectOrder} />
+        ? <OrderDetail order={selected} onBack={() => setSelected(null)} />
+        : <SearchView onSelectOrder={setSelected} />
       }
     </div>
   );
