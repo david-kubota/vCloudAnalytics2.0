@@ -15,6 +15,12 @@
   input:focus, select:focus, textarea:focus { border-color: #f97316; }
   tr.clickable-row:hover td { background-color: rgba(255,255,255,0.03); cursor: pointer; }
   tr:hover td { background-color: rgba(255,255,255,0.015); }
+  
+  /* Details/Summary styles for new dropdowns */
+  details > summary { list-style: none; outline: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  details[open] summary ~ * { animation: slideDown 0.2s ease-in-out; }
+  @keyframes slideDown { 0% { opacity: 0; transform: translateY(-5px); } 100% { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
@@ -47,8 +53,13 @@ const MOCK_ORDERS = [
     eventDateEnd: "2025-11-22",
     eventStatus: "Past",
     passes: [
-      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlNw==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null, access: "Active" },
-      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlOA==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null, access: "Active" }
+      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlNw==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null, status: "Active" },
+      { passId: "UGFzczY4N2U3MWEzNjMyMTI4YTFjNjBiMjVlOA==", passConfigId: "UGFzc0NvbmZpZzY4NGFkZjI4ZDEyMGQ5YTMwMzk3NjNiYQ==", source: "Mobile", reservedSeats: null, status: "Active" }
+    ],
+    includedEvents: [
+      { title: "Varsity Football vs Eastside", date: "Aug 20, 2025 • 7:00 PM", org: "Lincoln High School" },
+      { title: "Varsity Football vs Westlake", date: "Sep 05, 2025 • 7:00 PM", org: "Lincoln High School" },
+      { title: "Varsity Football vs Central (Homecoming)", date: "Sep 26, 2025 • 6:30 PM", org: "Lincoln High School" }
     ],
     transferHistory: []
   },
@@ -74,7 +85,7 @@ const MOCK_ORDERS = [
     eventDateEnd: null,
     eventStatus: "Past",
     passes: [
-      { passId: "UGFzczE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", passConfigId: "UGFzc0NvbmZpZzE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", source: "Web", reservedSeats: null, access: "Revoked" }
+      { passId: "UGFzczE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", passConfigId: "UGFzc0NvbmZpZzE5MjgzNzQ2YWIxYzJkMzRlZmdoMTIz", source: "Web", reservedSeats: null, status: "Refunded" }
     ],
     transferHistory: []
   },
@@ -100,11 +111,17 @@ const MOCK_ORDERS = [
     eventDateEnd: "2026-03-15",
     eventStatus: "In Progress",
     passes: [
-      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", source: "Mobile", reservedSeats: null, access: "Active" },
-      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", source: "Mobile", reservedSeats: "Row C, Seat 12", access: "Active" }
+      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyMTIz", source: "Mobile", reservedSeats: null, status: "Active" },
+      { passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", passConfigId: "UGFzc0NvbmZpZzM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", source: "Mobile", reservedSeats: "Row C, Seat 12", status: "Active" }
+    ],
+    includedEvents: [
+      { title: "JV/Varsity Wrestling Tri-Meet", date: "Nov 12, 2025 • 5:00 PM", org: "Riverside High School" },
+      { title: "Wrestling Dual vs North Ridge", date: "Dec 03, 2025 • 6:00 PM", org: "Riverside High School" },
+      { title: "Riverside Holiday Tournament", date: "Dec 18, 2025 • 9:00 AM", org: "Riverside High School" }
     ],
     transferHistory: [
-      { date: "2025-10-15T09:00:00.000Z", from: "sarah.m@yahoo.com", to: "mark.mitchell@gmail.com", passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", action: "Transfer" }
+      { date: "2025-09-05T10:15:00.000Z", from: "sarah.m@yahoo.com", to: "david.mitchell@gmail.com", passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", action: "Transfer", note: "Sent to husband for the season" },
+      { date: "2025-12-01T14:30:00.000Z", from: "david.mitchell@gmail.com", to: "sarah.m@yahoo.com", passId: "UGFzczM4NDc1NjEweHk5ejh3NzZ2dXFyNDU2", action: "Transfer", note: "Transferred back" }
     ]
   },
   {
@@ -129,34 +146,7 @@ const MOCK_ORDERS = [
     eventDateEnd: null,
     eventStatus: "Upcoming",
     passes: [
-      { passId: "UGFzczQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", passConfigId: "UGFzc0NvbmZpZzQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", source: "Web", reservedSeats: null, access: "Active" }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "rp2q3r45stuv",
-    id: "VGlja2V0R3JvdXBycDJxM3I0NXN0dXYxMjM0NTY3ODk=",
-    userId: "55019283",
-    firstName: "Linda",
-    lastName: "Park",
-    email: "linda.park82@outlook.com",
-    orderTotal: 80.00,
-    currency: "USD",
-    itemCategories: "Pass",
-    source: "Mobile",
-    createdAt: "2026-02-18T19:10:00.000Z",
-    updatedAt: "2026-02-18T19:10:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    organization: "Eastlake Preparatory",
-    eventName: "2026 Lacrosse Season Pass",
-    eventDateStart: "2026-03-01",
-    eventDateEnd: "2026-06-15",
-    eventStatus: "Upcoming",
-    passes: [
-      { passId: "UGFzzNTUwMTkyODNycDJxM3I0NXN0dXYxMjM=", passConfigId: "UGFzc0NvbmZpZzU1MDE5MjgzcnAycTNyNDVzdHV2MTIz", source: "Mobile", reservedSeats: null, access: "Active" },
-      { passId: "UGFzzNTUwMTkyODNycDJxM3I0NXN0dXY0NTY=", passConfigId: "UGFzc0NvbmZpZzU1MDE5MjgzcnAycTNyNDVzdHV2NDU2", source: "Mobile", reservedSeats: null, access: "Active" }
+      { passId: "UGFzczQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", passConfigId: "UGFzc0NvbmZpZzQ3MzgyOTEwbW41cDZxNzhyc3R1MTIz", source: "Web", reservedSeats: null, status: "Active" }
     ],
     transferHistory: []
   },
@@ -175,119 +165,14 @@ const MOCK_ORDERS = [
     updatedAt: "2026-02-19T14:22:00.000Z",
     deletedAt: null,
     originalTicketGroup: null,
-    status: "Active",
+    status: "Redeemed",
     organization: "Central High School",
     eventName: "Varsity Football vs. Northern Prep",
-    eventDateStart: "2026-02-28",
-    eventDateEnd: null,
-    eventStatus: "Upcoming",
-    passes: [
-      { passId: "UGFzczkwMTgyNzNrbDhtOW4wMW9wcXIxMjM=", passConfigId: "UGFzc0NvbmZpZzkwMTgyNzNrbDhtOW4wMW9wcXIxMjM=", source: "Web", reservedSeats: "Row A, Seat 5", access: "Active" }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "cd3e4f56ghij",
-    id: "VGlja2V0R3JvdXBjZDNlNGY1NmdoaWoxMjM0NTY3ODk=",
-    userId: "71029384",
-    firstName: "Angela",
-    lastName: "Wright",
-    email: "a.wright@icloud.com",
-    orderTotal: 60.00,
-    currency: "USD",
-    itemCategories: "Season Pass",
-    source: "Mobile",
-    createdAt: "2026-01-28T09:15:00.000Z",
-    updatedAt: "2026-01-28T09:15:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    organization: "Summit Academy",
-    eventName: "2025-26 Boys Basketball Season Pass",
-    eventDateStart: "2025-11-15",
-    eventDateEnd: "2026-03-10",
-    eventStatus: "In Progress",
-    passes: [
-      { passId: "UGFzczcxMDI5Mzg0Y2QzZTRmNTZnaGlqMTIz", passConfigId: "UGFzc0NvbmZpZzcxMDI5Mzg0Y2QzZTRmNTZnaGlqMTIz", source: "Mobile", reservedSeats: "Row D, Seat 8", access: "Active" },
-      { passId: "UGFzczcxMDI5Mzg0Y2QzZTRmNTZnaGlqNDU2", passConfigId: "UGFzc0NvbmZpZzcxMDI5Mzg0Y2QzZTRmNTZnaGlqNDU2", source: "Mobile", reservedSeats: "Row D, Seat 9", access: "Active" }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "wx5y6z78abcd",
-    id: "VGlja2V0R3JvdXB3eDV5Nno3OGFiY2QxMjM0NTY3ODk=",
-    userId: "82937461",
-    firstName: "Rachel",
-    lastName: "Nguyen",
-    email: "rachel.nguyen@proton.me",
-    orderTotal: 15.00,
-    currency: "USD",
-    itemCategories: "Single Game",
-    source: "Web",
-    createdAt: "2026-02-14T17:45:00.000Z",
-    updatedAt: "2026-02-14T17:45:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    organization: "Riverside High School",
-    eventName: "Girls Volleyball vs. Lakeview",
     eventDateStart: "2026-02-20",
-    eventDateEnd: null,
-    eventStatus: "Upcoming",
-    passes: [
-      { passId: "UGFzcjgyOTM3NDYxd3g1eTZ6NzhhYmNkMTIz", passConfigId: "UGFzc0NvbmZpZzgyOTM3NDYxd3g1eTZ6NzhhYmNkMTIz", source: "Web", reservedSeats: null, access: "Active" }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "ef7g8h90ijkl",
-    id: "VGlja2V0R3JvdXBlZjdnOGg5MGlqa2wxMjM0NTY3ODk=",
-    userId: "93048275",
-    firstName: "Marcus",
-    lastName: "Johnson",
-    email: "marcusj_22@yahoo.com",
-    orderTotal: 35.00,
-    currency: "USD",
-    itemCategories: "Pass",
-    source: "Mobile",
-    createdAt: "2026-02-05T12:30:00.000Z",
-    updatedAt: "2026-02-05T12:30:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    organization: "Westside Academy",
-    eventName: "Winter Sports Bundle Pass",
-    eventDateStart: "2025-12-01",
-    eventDateEnd: "2026-03-01",
-    eventStatus: "In Progress",
-    passes: [
-      { passId: "UGFzczkzMDQ4Mjc1ZWY3ZzhoOTBpamtsMTIz", passConfigId: "UGFzc0NvbmZpZzkzMDQ4Mjc1ZWY3ZzhoOTBpamtsMTIz", source: "Mobile", reservedSeats: null, access: "Active" }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "tu2v3w45xyza",
-    id: "VGlja2V0R3JvdXB0dTJ2M3c0NXh5emExMjM0NTY3ODk=",
-    userId: "10293847",
-    firstName: "Emily",
-    lastName: "Sato",
-    email: "emilysato@gmail.com",
-    orderTotal: 20.00,
-    currency: "USD",
-    itemCategories: "Single Game",
-    source: "Mobile",
-    createdAt: "2026-02-12T08:00:00.000Z",
-    updatedAt: "2026-02-12T08:00:00.000Z",
-    deletedAt: "2026-02-13T10:00:00.000Z",
-    originalTicketGroup: "VGlja2V0R3JvdXBPUklHMTIzNDU2Nzg5",
-    status: "Cancelled",
-    organization: "North Valley High School",
-    eventName: "Girls Basketball vs. Hillcrest",
-    eventDateStart: "2026-02-15",
     eventDateEnd: null,
     eventStatus: "Past",
     passes: [
-      { passId: "UGFzcjEwMjkzODQ3dHUydjN3NDV4eXphMTIz", passConfigId: "UGFzc0NvbmZpZzEwMjkzODQ3dHUydjN3NDV4eXphMTIz", source: "Mobile", reservedSeats: null, access: "Revoked" }
+      { passId: "UGFzczkwMTgyNzNrbDhtOW4wMW9wcXIxMjM=", passConfigId: "UGFzc0NvbmZpZzkwMTgyNzNrbDhtOW4wMW9wcXIxMjM=", source: "Web", reservedSeats: "Sec 104, Row A, Seat 5", status: "Redeemed" }
     ],
     transferHistory: []
   },
@@ -313,61 +198,40 @@ const MOCK_ORDERS = [
     eventDateEnd: "2026-02-28",
     eventStatus: "In Progress",
     passes: [
-      { passId: "UGFzcjIwMzg0NzU2cXI0czV0Njd1dnd4MTIz", passConfigId: "UGFzc0NvbmZpZzIwMzg0NzU2cXI0czV0Njd1dnd4MTIz", source: "Web", reservedSeats: null, access: "Active" },
-      { passId: "UGFzcjIwMzg0NzU2cXI0czV0Njd1dnd4NDU2", passConfigId: "UGFzc0NvbmZpZzIwMzg0NzU2cXI0czV0Njd1dnd4NDU2", source: "Web", reservedSeats: null, access: "Active" }
+      { passId: "UGFzcjIwMzg0NzU2cXI0czV0Njd1dnd4MTIz", passConfigId: "UGFzc0NvbmZpZzIwMzg0NzU2cXI0czV0Njd1dnd4MTIz", source: "Web", reservedSeats: null, status: "Active" },
+      { passId: "UGFzcjIwMzg0NzU2cXI0czV0Njd1dnd4NDU2", passConfigId: "UGFzc0NvbmZpZzIwMzg0NzU2cXI0czV0Njd1dnd4NDU2", source: "Web", reservedSeats: null, status: "Active" }
     ],
-    transferHistory: []
+    includedEvents: [
+      { title: "Swim & Dive Tri-Meet", date: "Nov 05, 2025 • 4:00 PM", org: "Central High School" },
+      { title: "Central Invitational", date: "Dec 10, 2025 • 8:30 AM", org: "Central High School" }
+    ],
+    transferHistory: [
+      { date: "2026-01-22T09:00:00.000Z", from: "j.okafor@outlook.com", to: "m.okafor@gmail.com", passId: "UGFzcjIwMzg0NzU2cXI0czV0Njd1dnd4NDU2", action: "Transfer", note: "Transferred 2nd pass to brother" }
+    ]
   },
   {
-    orderNumber: "yz1a2b34cdef",
-    id: "VGlja2V0R3JvdXB5ejFhMmIzNGNkZWYxMjM0NTY3ODk=",
-    userId: "30495867",
-    firstName: "Priya",
-    lastName: "Sharma",
-    email: "priya.sharma@live.com",
-    orderTotal: 12.00,
+    orderNumber: "tu2v3w45xyza",
+    id: "VGlja2V0R3JvdXB0dTJ2M3c0NXh5emExMjM0NTY3ODk=",
+    userId: "10293847",
+    firstName: "Emily",
+    lastName: "Sato",
+    email: "emilysato@gmail.com",
+    orderTotal: 20.00,
     currency: "USD",
     itemCategories: "Single Game",
     source: "Mobile",
-    createdAt: "2026-02-17T20:00:00.000Z",
-    updatedAt: "2026-02-17T20:00:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    organization: "Eastlake Preparatory",
-    eventName: "Track & Field Invitational",
-    eventDateStart: "2026-03-05",
+    createdAt: "2026-02-12T08:00:00.000Z",
+    updatedAt: "2026-02-13T10:00:00.000Z",
+    deletedAt: "2026-02-13T10:00:00.000Z",
+    originalTicketGroup: "VGlja2V0R3JvdXBPUklHMTIzNDU2Nzg5",
+    status: "Revoked",
+    organization: "North Valley High School",
+    eventName: "Girls Basketball vs. Hillcrest",
+    eventDateStart: "2026-02-15",
     eventDateEnd: null,
-    eventStatus: "Upcoming",
+    eventStatus: "Past",
     passes: [
-      { passId: "UGFzcjMwNDk1ODY3eXoxYTJiMzRjZGVmMTIz", passConfigId: "UGFzc0NvbmZpZzMwNDk1ODY3eXoxYTJiMzRjZGVmMTIz", source: "Mobile", reservedSeats: null, access: "Active" }
-    ],
-    transferHistory: []
-  },
-  {
-    orderNumber: "fg6h7j89klmn",
-    id: "VGlja2V0R3JvdXBmZzZoN2o4OWtsbW4xMjM0NTY3ODk=",
-    userId: "40506978",
-    firstName: "Carlos",
-    lastName: "Reyes",
-    email: "creyes_99@gmail.com",
-    orderTotal: 90.00,
-    currency: "USD",
-    itemCategories: "Season Pass",
-    source: "Web",
-    createdAt: "2026-02-20T10:05:00.000Z",
-    updatedAt: "2026-02-20T10:05:00.000Z",
-    deletedAt: null,
-    originalTicketGroup: null,
-    status: "Active",
-    organization: "Summit Academy",
-    eventName: "2026 Spring Sports All-Access Pass",
-    eventDateStart: "2026-03-15",
-    eventDateEnd: "2026-06-30",
-    eventStatus: "Upcoming",
-    passes: [
-      { passId: "UGFzcjQwNTA2OTc4Zmc2aDdqODlrbG1uMTIz", passConfigId: "UGFzc0NvbmZpZzQwNTA2OTc4Zmc2aDdqODlrbG1uMTIz", source: "Web", reservedSeats: "Row B, Seat 3", access: "Active" },
-      { passId: "UGFzcjQwNTA2OTc4Zmc2aDdqODlrbG1uNDU2", passConfigId: "UGFzc0NvbmZpZzQwNTA2OTc4Zmc2aDdqODlrbG1uNDU2", source: "Web", reservedSeats: "Row B, Seat 4", access: "Active" }
+      { passId: "UGFzcjEwMjkzODQ3dHUydjN3NDV4eXphMTIz", passConfigId: "UGFzc0NvbmZpZzEwMjkzODQ3dHUydjN3NDV4eXphMTIz", source: "Mobile", reservedSeats: null, status: "Revoked" }
     ],
     transferHistory: []
   }
@@ -428,9 +292,23 @@ const CopyBtn = ({ text }) => {
 const StatusPill = ({ status }) => {
   const map = {
     Active:     "bg-green-900/30 text-green-400 border-green-800",
-    Refunded:   "bg-red-900/30 text-red-400 border-red-900",
-    Transferred:"bg-blue-900/30 text-blue-400 border-blue-800",
-    Cancelled:  "bg-slate-700/30 text-slate-400 border-slate-600",
+    Redeemed:   "bg-blue-900/30 text-blue-400 border-blue-800",
+    Refunded:   "bg-slate-700/30 text-slate-400 border-slate-500",
+    Revoked:    "bg-red-900/30 text-red-400 border-red-900",
+  };
+  return (
+    <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${map[status] || map.Active}`}>
+      {status}
+    </span>
+  );
+};
+
+const TicketStatusBadge = ({ status }) => {
+  const map = {
+    Active:     "bg-green-900/30 text-green-400 border-green-800",
+    Redeemed:   "bg-blue-900/30 text-blue-400 border-blue-800",
+    Refunded:   "bg-slate-700/30 text-slate-400 border-slate-500",
+    Revoked:    "bg-red-900/30 text-red-400 border-red-900",
   };
   return (
     <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${map[status] || map.Active}`}>
@@ -451,13 +329,6 @@ const EventStatusBadge = ({ status }) => {
       {status}
     </span>
   );
-};
-
-const AccessBadge = ({ access }) => {
-  if (access === "Revoked") {
-    return <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase border border-red-900 bg-red-900/30 text-red-400">Revoked</span>;
-  }
-  return <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase border border-green-800 bg-green-900/30 text-green-400">Active</span>;
 };
 
 const Toast = ({ msg, type }) => (
@@ -501,9 +372,8 @@ const RefundModal = ({ order, onClose, onConfirm }) => {
         <div className="bg-slate-900 rounded-xl p-4 mb-5 space-y-2 text-sm border border-slate-700">
           <div className="flex justify-between"><span className="text-slate-400">Order Total</span><span className="font-bold">${order.orderTotal.toFixed(2)}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">Customer</span><span>{order.firstName} {order.lastName}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Email</span><span className="text-xs">{order.email}</span></div>
           <div className="flex justify-between"><span className="text-slate-400">Pass Type</span><span>{order.itemCategories}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Passes</span><span>{order.passes.length}</span></div>
+          <div className="flex justify-between"><span className="text-slate-400">Tickets/Passes</span><span>{order.passes.length}</span></div>
         </div>
 
         <div className="mb-4">
@@ -548,17 +418,11 @@ const RefundModal = ({ order, onClose, onConfirm }) => {
             <option value="customer_request">Customer Request</option>
             <option value="event_cancelled">Event Cancelled</option>
             <option value="technical_issue">Technical Issue / Stream Failure</option>
-            <option value="duplicate_charge">Duplicate Charge</option>
-            <option value="billing_error">Billing Error</option>
             <option value="other">Other</option>
           </select>
         </div>
 
-        <div className="bg-red-900/20 border border-red-800 rounded-lg p-3 mb-5 text-xs text-red-300 leading-relaxed">
-          Confirming will immediately initiate a refund of <strong>{refundAmount}</strong> to their original payment method.
-        </div>
-
-        <div className="flex gap-3">
+        <div className="flex gap-3 mt-8">
           <button onClick={onClose} className="flex-1 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white font-bold text-sm transition">Cancel</button>
           <button onClick={handleConfirm} className="flex-1 py-3 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-sm transition">
             Confirm Refund
@@ -572,13 +436,11 @@ const RefundModal = ({ order, onClose, onConfirm }) => {
 // ─── Transfer Modal ───────────────────────────────────────────────────────────
 const TransferModal = ({ order, onClose, onConfirm }) => {
   const [newEmail, setNewEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
   const [selectedPass, setSelectedPass] = useState("all");
   const [note, setNote] = useState("");
 
   const handle = () => {
     if (!newEmail) { alert("Please enter a recipient email address."); return; }
-    if (newEmail !== confirmEmail) { alert("Email addresses do not match."); return; }
     onConfirm({ newEmail, selectedPass, note });
   };
 
@@ -588,9 +450,7 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
         <div className="flex justify-between items-start mb-5">
           <div>
             <h2 className="text-lg font-black">Transfer Ticket / Pass</h2>
-            <p className="text-slate-400 text-xs mt-1">
-              From <span className="text-white font-semibold">{order.firstName} {order.lastName}</span> ({order.email})
-            </p>
+            <p className="text-slate-400 text-xs mt-1">From <span className="text-white">{order.email}</span></p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold leading-none">×</button>
         </div>
@@ -601,7 +461,7 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
             <option value="all">All Passes in this Order ({order.passes.length})</option>
             {order.passes.map(p => (
               <option key={p.passId} value={p.passId}>
-                {p.passId.substring(0, 28)}… {p.reservedSeats ? `(${p.reservedSeats})` : ""}
+                {p.passId.substring(0, 20)}… {p.reservedSeats ? `(${p.reservedSeats})` : ""}
               </option>
             ))}
           </select>
@@ -618,41 +478,19 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Confirm Recipient Email</label>
-          <input
-            type="email"
-            value={confirmEmail}
-            onChange={e => setConfirmEmail(e.target.value)}
-            placeholder="re-enter email to confirm"
-            className={`w-full p-3 rounded-lg text-sm transition
-              ${confirmEmail && newEmail !== confirmEmail ? "border-red-600" : "focus:border-orange-500"}`}
-          />
-          {confirmEmail && newEmail !== confirmEmail && (
-            <p className="text-red-400 text-xs mt-1">Email addresses do not match.</p>
-          )}
-        </div>
-
         <div className="mb-5">
-          <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Internal Note (Optional)</label>
+          <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-2">Internal Note</label>
           <textarea
             value={note}
             onChange={e => setNote(e.target.value)}
             rows={2}
-            placeholder="e.g. Fan requested transfer to family member"
             className="w-full p-3 rounded-lg text-sm focus:border-orange-500 transition resize-none"
           />
         </div>
 
-        <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3 mb-5 text-xs text-blue-300 leading-relaxed">
-          The recipient will receive a confirmation email with instructions to access their transferred pass. The original owner's access will be revoked.
-        </div>
-
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white font-bold text-sm transition">Cancel</button>
-          <button onClick={handle} className="flex-1 py-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm transition">
-            Transfer Pass
-          </button>
+          <button onClick={handle} className="flex-1 py-3 rounded-lg bg-orange-600 hover:bg-orange-500 text-white font-bold text-sm transition">Transfer</button>
         </div>
       </div>
     </div>
@@ -661,7 +499,7 @@ const TransferModal = ({ order, onClose, onConfirm }) => {
 
 // ─── Revoke Access Modal ─────────────────────────────────────────────────────
 const RevokeModal = ({ order, onClose, onConfirm }) => {
-  const seatedPasses = order.passes.filter(p => p.reservedSeats && p.access === "Active");
+  const seatedPasses = order.passes.filter(p => p.reservedSeats && p.status === "Active");
   const [releaseSeats, setReleaseSeats] = useState(true);
 
   return (
@@ -670,51 +508,32 @@ const RevokeModal = ({ order, onClose, onConfirm }) => {
         <div className="flex justify-between items-start mb-5">
           <div>
             <h2 className="text-lg font-black text-amber-400">Revoke Access</h2>
-            <p className="text-slate-400 text-xs mt-1">
-              This will revoke fan access for this order.
-            </p>
+            <p className="text-slate-400 text-xs mt-1">This will revoke fan access for this order.</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-white text-xl font-bold leading-none">×</button>
-        </div>
-
-        <div className="bg-slate-900 rounded-xl p-4 mb-5 space-y-2 text-sm border border-slate-700">
-          <div className="flex justify-between"><span className="text-slate-400">Event</span><span className="text-right font-semibold">{order.eventName}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Organization</span><span>{order.organization}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Customer</span><span>{order.firstName} {order.lastName}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Email</span><span className="text-xs">{order.email}</span></div>
-          <div className="flex justify-between"><span className="text-slate-400">Active Passes</span><span>{order.passes.filter(p => p.access === "Active").length}</span></div>
         </div>
 
         {seatedPasses.length > 0 && (
           <div className="mb-5">
             <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={releaseSeats}
-                onChange={e => setReleaseSeats(e.target.checked)}
-                className="mt-0.5 accent-amber-500 w-4 h-4"
-              />
+              <input type="checkbox" checked={releaseSeats} onChange={e => setReleaseSeats(e.target.checked)} className="mt-0.5 accent-amber-500 w-4 h-4"/>
               <div>
                 <span className="text-sm font-bold text-slate-200">Release reserved seats</span>
-                <div className="text-xs text-slate-400 mt-1 space-y-0.5">
-                  {seatedPasses.map(p => (
-                    <div key={p.passId}>{p.reservedSeats}</div>
-                  ))}
+                <div className="text-xs text-slate-400 mt-1">
+                  {seatedPasses.map(p => <div key={p.passId}>{p.reservedSeats}</div>)}
                 </div>
               </div>
             </label>
           </div>
         )}
 
-        <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-3 mb-5 text-xs text-amber-300 leading-relaxed">
-          Revoking access will immediately prevent the fan from viewing this event's content. <strong>No refund will be issued automatically</strong> — use the Refund button separately if a refund is also needed.
+        <div className="bg-amber-900/20 border border-amber-800 rounded-lg p-3 mb-5 text-xs text-amber-300">
+          Revoking access will prevent the fan from viewing content. No automatic refund will be issued.
         </div>
 
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-lg border border-slate-600 text-slate-400 hover:text-white font-bold text-sm transition">Cancel</button>
-          <button onClick={() => onConfirm({ releaseSeats })} className="flex-1 py-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm transition">
-            Revoke Access
-          </button>
+          <button onClick={() => onConfirm({ releaseSeats })} className="flex-1 py-3 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-sm transition">Revoke Access</button>
         </div>
       </div>
     </div>
@@ -727,7 +546,6 @@ const OrderDetail = ({ order: initial, onBack }) => {
   const [showRefund, setShowRefund] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showRevoke, setShowRevoke] = useState(false);
-  const [accessRevoked, setAccessRevoked] = useState(false);
   const [showTechIds, setShowTechIds] = useState(false);
   const [toast, setToast] = useState(null);
 
@@ -737,9 +555,13 @@ const OrderDetail = ({ order: initial, onBack }) => {
   };
 
   const handleRefund = ({ reason, refundType, amount }) => {
-    setOrder(o => ({ ...o, status: "Refunded" }));
+    setOrder(o => ({ 
+      ...o, 
+      status: "Refunded",
+      passes: o.passes.map(p => ({ ...p, status: "Refunded" }))
+    }));
     setShowRefund(false);
-    notify(`${refundType === "full" ? "Full" : "Partial"} refund of ${amount} processed. Reason: ${reason.replace(/_/g, " ")}.`);
+    notify(`${refundType === "full" ? "Full" : "Partial"} refund of ${amount} processed.`);
   };
 
   const handleTransfer = ({ newEmail, selectedPass, note }) => {
@@ -759,21 +581,23 @@ const OrderDetail = ({ order: initial, onBack }) => {
   const handleRevoke = ({ releaseSeats }) => {
     setOrder(o => ({
       ...o,
-      passes: o.passes.map(p => ({ ...p, access: "Revoked" }))
+      status: "Revoked",
+      passes: o.passes.map(p => ({ ...p, status: "Revoked" }))
     }));
-    setAccessRevoked(true);
     setShowRevoke(false);
-    notify(`Access revoked for ${order.firstName} ${order.lastName}.${releaseSeats ? " Reserved seats released." : ""}`);
+    notify(`Access revoked for ${order.firstName} ${order.lastName}.`);
   };
 
   const handleResend = () => {
     notify(`Confirmation email resent to ${order.email}.`);
   };
 
-  const isRefunded = order.status === "Refunded";
-  const hasActiveAccess = order.passes.some(p => p.access === "Active") && !accessRevoked;
+  const isRefundedOrRevoked = order.status === "Refunded" || order.status === "Revoked";
+  const hasActiveAccess = order.passes.some(p => p.status === "Active");
+  const isPass = order.itemCategories.toLowerCase().includes("pass");
+  const hasReservedSeats = order.passes.some(p => p.reservedSeats);
 
-  // Order Details rows (plain-English names, human-readable dates)
+  // Core order details
   const detailRows = [
     { label: "Customer",       value: `${order.firstName} ${order.lastName}` },
     { label: "Email",          value: order.email },
@@ -783,14 +607,6 @@ const OrderDetail = ({ order: initial, onBack }) => {
     { label: "Purchased On",   value: fmtHuman(order.createdAt) },
     { label: "Last Updated",   value: fmtHuman(order.updatedAt) },
   ];
-
-  // Conditional rows
-  if (order.deletedAt) {
-    detailRows.push({ label: "Deleted On", value: fmtHuman(order.deletedAt) });
-  }
-  if (order.originalTicketGroup) {
-    detailRows.push({ label: "Original Order", value: order.originalTicketGroup });
-  }
 
   return (
     <div>
@@ -814,11 +630,6 @@ const OrderDetail = ({ order: initial, onBack }) => {
           <h2 className="text-2xl font-black flex flex-wrap items-center gap-3">
             {order.firstName} {order.lastName}
             <StatusPill status={order.status} />
-            {accessRevoked && (
-              <span className="px-2.5 py-0.5 rounded text-[9px] font-black uppercase border border-amber-700 bg-amber-900/30 text-amber-400">
-                Access Revoked
-              </span>
-            )}
           </h2>
           <p className="text-slate-400 text-xs mt-1 font-mono">
             Order # <span className="text-orange-400">{order.orderNumber}</span>
@@ -830,40 +641,23 @@ const OrderDetail = ({ order: initial, onBack }) => {
 
         {/* Action buttons */}
         <div className="flex gap-2 flex-wrap">
-          <button
-            onClick={handleResend}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 text-sm font-bold transition"
-          >
+          <button onClick={handleResend} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-600 text-slate-300 hover:text-white hover:border-slate-400 text-sm font-bold transition">
             Resend Email
           </button>
-          {!isRefunded && (
+          {!isRefundedOrRevoked && (
             <>
-              <button
-                onClick={() => setShowTransfer(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-700 text-blue-400 hover:bg-blue-900/20 text-sm font-bold transition"
-              >
-                Transfer Pass
+              <button onClick={() => setShowTransfer(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-blue-700 text-blue-400 hover:bg-blue-900/20 text-sm font-bold transition">
+                Transfer Ticket
               </button>
               {hasActiveAccess && (
-                <button
-                  onClick={() => setShowRevoke(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-700 text-amber-400 hover:bg-amber-900/20 text-sm font-bold transition"
-                >
+                <button onClick={() => setShowRevoke(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-amber-700 text-amber-400 hover:bg-amber-900/20 text-sm font-bold transition">
                   Revoke Access
                 </button>
               )}
-              <button
-                onClick={() => setShowRefund(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-700 text-red-400 hover:bg-red-900/20 text-sm font-bold transition"
-              >
+              <button onClick={() => setShowRefund(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-red-700 text-red-400 hover:bg-red-900/20 text-sm font-bold transition">
                 Process Refund
               </button>
             </>
-          )}
-          {isRefunded && (
-            <span className="px-4 py-2 rounded-lg border border-slate-700 text-slate-600 text-sm font-bold italic">
-              Order Refunded
-            </span>
           )}
         </div>
       </div>
@@ -880,19 +674,40 @@ const OrderDetail = ({ order: initial, onBack }) => {
               <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Event Information</h3>
               <EventStatusBadge status={order.eventStatus} />
             </div>
-            <div className="p-4 space-y-3 text-sm">
-              <div className="flex justify-between">
+            <div className="p-4 space-y-4 text-sm">
+              <div className="flex justify-between items-center">
                 <span className="text-slate-400">Organization</span>
-                <span className="text-right font-semibold">{order.organization}</span>
+                <a href="#" className="text-right font-semibold text-blue-400 hover:underline">{order.organization}</a>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between items-center">
                 <span className="text-slate-400">Event / Pass</span>
-                <span className="text-right font-semibold">{order.eventName}</span>
+                <a href="#" className="text-right font-semibold text-blue-400 hover:underline">{order.eventName}</a>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Date</span>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Date Range</span>
                 <span className="text-right">{fmtEventDate(order.eventDateStart, order.eventDateEnd)}</span>
               </div>
+              
+              {/* Pass Included Events Dropdown */}
+              {isPass && order.includedEvents && (
+                <details className="mt-4 bg-slate-900/50 border border-slate-700 rounded-lg p-3">
+                  <summary className="text-xs font-bold text-orange-400 cursor-pointer flex justify-between items-center">
+                    <span>View Included Events ({order.includedEvents.length})</span>
+                    <span className="text-slate-500">▼</span>
+                  </summary>
+                  <div className="mt-3 space-y-2">
+                    {order.includedEvents.map((evt, i) => (
+                      <div key={i} className="bg-slate-800 p-2.5 rounded border border-slate-700 text-xs flex justify-between items-center">
+                        <div>
+                          <div className="font-bold text-slate-200">{evt.title}</div>
+                          <div className="text-slate-500 mt-0.5">{evt.org}</div>
+                        </div>
+                        <div className="text-slate-400 text-right">{evt.date}</div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
             </div>
           </div>
 
@@ -902,64 +717,40 @@ const OrderDetail = ({ order: initial, onBack }) => {
               <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Order Details</h3>
             </div>
             <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-slate-800/40 text-slate-500 uppercase text-[9px] font-black tracking-wider border-b border-slate-700/50">
-                  <th className="px-4 py-2 text-left w-40">Field</th>
-                  <th className="px-4 py-2 text-left">Value</th>
-                  <th className="px-4 py-2 w-16"></th>
-                </tr>
-              </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {detailRows.map(r => (
                   <tr key={r.label}>
-                    <td className="px-4 py-2 font-bold text-slate-300 whitespace-nowrap">{r.label}</td>
-                    <td className="px-4 py-2 text-slate-400 break-all">{r.value}</td>
-                    <td className="px-4 py-2 text-right"><CopyBtn text={String(r.value)} /></td>
+                    <td className="px-4 py-3 font-bold text-slate-400 whitespace-nowrap w-40">{r.label}</td>
+                    <td className="px-4 py-3 text-slate-200">{r.value}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
             {/* Technical IDs collapsible */}
-            <div className="border-t border-slate-700/50">
+            <div className="border-t border-slate-700/50 bg-slate-900/30">
               <button
                 onClick={() => setShowTechIds(!showTechIds)}
-                className="w-full px-4 py-2.5 text-left text-xs font-bold text-slate-500 hover:text-slate-300 transition flex items-center gap-2"
+                className="w-full px-4 py-3 text-left text-xs font-bold text-slate-500 hover:text-slate-300 transition flex items-center justify-between"
               >
-                <span className={`transition-transform inline-block ${showTechIds ? "rotate-180" : ""}`}>▾</span>
                 Technical IDs
+                <span className={`transition-transform inline-block ${showTechIds ? "rotate-180" : ""}`}>▼</span>
               </button>
               {showTechIds && (
-                <table className="w-full text-xs">
-                  <tbody className="divide-y divide-slate-800/60">
-                    <tr>
-                      <td className="px-4 py-2 font-bold text-slate-500 whitespace-nowrap w-40">Order ID</td>
-                      <td className="px-4 py-2 text-slate-500 font-mono text-[10px] break-all">{order.id}</td>
-                      <td className="px-4 py-2 text-right w-16"><CopyBtn text={order.id} /></td>
-                    </tr>
-                    <tr>
-                      <td className="px-4 py-2 font-bold text-slate-500 whitespace-nowrap w-40">User ID</td>
-                      <td className="px-4 py-2 text-slate-500 font-mono text-[10px]">
-                        <a href={`https://admin.hudl.com/user/${order.userId}`} target="_blank" rel="noreferrer" className="text-blue-400/70 hover:underline">{order.userId}</a>
-                      </td>
-                      <td className="px-4 py-2 text-right w-16"><CopyBtn text={order.userId} /></td>
-                    </tr>
-                    {order.passes.map((p, i) => (
-                      <tr key={p.passId}>
-                        <td className="px-4 py-2 font-bold text-slate-500 whitespace-nowrap w-40">Pass ID #{i + 1}</td>
-                        <td className="px-4 py-2 text-slate-500 font-mono text-[10px] break-all">{p.passId}</td>
-                        <td className="px-4 py-2 text-right w-16"><CopyBtn text={p.passId} /></td>
+                <div className="px-4 pb-4">
+                  <table className="w-full text-[10px] font-mono">
+                    <tbody className="divide-y divide-slate-800/60">
+                      <tr>
+                        <td className="py-2 text-slate-500">Order ID</td>
+                        <td className="py-2 text-slate-300 break-all">{order.id} <CopyBtn text={order.id}/></td>
                       </tr>
-                    ))}
-                    {order.passes.map((p, i) => (
-                      <tr key={`cfg-${p.passConfigId}`}>
-                        <td className="px-4 py-2 font-bold text-slate-500 whitespace-nowrap w-40">Pass Config #{i + 1}</td>
-                        <td className="px-4 py-2 text-slate-500 font-mono text-[10px] break-all">{p.passConfigId}</td>
-                        <td className="px-4 py-2 text-right w-16"><CopyBtn text={p.passConfigId} /></td>
+                      <tr>
+                        <td className="py-2 text-slate-500">User ID</td>
+                        <td className="py-2 text-slate-300 break-all">{order.userId} <CopyBtn text={order.userId}/></td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
@@ -971,33 +762,55 @@ const OrderDetail = ({ order: initial, onBack }) => {
           {/* Associated Passes */}
           <div className="card rounded-xl overflow-hidden">
             <div className="bg-slate-800 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
-              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Associated Passes</h3>
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">Associated Tickets</h3>
               <span className="text-[9px] font-black text-orange-400 bg-orange-900/20 border border-orange-800 px-2 py-0.5 rounded-full">
                 {order.passes.length}
               </span>
             </div>
+            
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-slate-800/40 text-slate-500 uppercase text-[9px] font-black tracking-wider border-b border-slate-700/50">
-                  <th className="px-4 py-2 text-left">Pass Id</th>
-                  <th className="px-4 py-2 text-left">Source</th>
+                  <th className="px-4 py-2 text-left">Ticket / Pass ID</th>
                   <th className="px-4 py-2 text-left">Reserved Seats</th>
-                  <th className="px-4 py-2 text-left">Access</th>
+                  <th className="px-4 py-2 text-left">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {order.passes.map(p => (
                   <tr key={p.passId}>
-                    <td className="px-4 py-2 font-mono text-blue-400 break-all">
-                      <span title={p.passId}>{p.passId.substring(0, 22)}…</span>
+                    <td className="px-4 py-3 font-mono text-slate-400 break-all">
+                      <span title={p.passId}>{p.passId.substring(0, 16)}…</span>
                     </td>
-                    <td className="px-4 py-2 text-slate-400">{p.source}</td>
-                    <td className="px-4 py-2 text-slate-400">{p.reservedSeats || "—"}</td>
-                    <td className="px-4 py-2"><AccessBadge access={p.access} /></td>
+                    <td className="px-4 py-3 text-slate-300 font-semibold">{p.reservedSeats || "—"}</td>
+                    <td className="px-4 py-3"><TicketStatusBadge status={p.status} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            
+            {/* Venue Map Dropdown for Reserved Seating */}
+            {hasReservedSeats && (
+              <div className="p-4 border-t border-slate-700 bg-slate-900/40">
+                <details className="bg-slate-800 border border-slate-700 rounded-lg p-3">
+                  <summary className="text-xs font-bold text-orange-400 cursor-pointer flex justify-between items-center">
+                    <span>View Venue Map (Dummy Data)</span>
+                    <span className="text-slate-500">▼</span>
+                  </summary>
+                  <div className="mt-4 p-4 bg-slate-900 rounded border border-slate-700 flex flex-col items-center justify-center">
+                    <div className="w-3/4 h-12 bg-slate-700 rounded-t-full flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase tracking-widest border border-slate-600 shadow-lg">
+                      Stage / Court
+                    </div>
+                    <div className="flex gap-2 w-full mt-4 justify-center">
+                       <div className="w-1/3 h-24 bg-orange-900/30 border border-orange-700/50 rounded flex flex-col items-center justify-center text-xs text-orange-400 font-bold transition hover:bg-orange-900/50"><span>Sec 103</span><span className="text-[9px] font-normal text-slate-400 mt-1">General</span></div>
+                       <div className="w-1/3 h-24 bg-blue-900/40 border border-blue-500 rounded flex flex-col items-center justify-center text-xs text-blue-300 font-bold shadow-[0_0_15px_rgba(59,130,246,0.2)]"><span>Sec 104</span><span className="text-[9px] font-normal text-slate-400 mt-1">Reserved</span></div>
+                       <div className="w-1/3 h-24 bg-green-900/30 border border-green-700/50 rounded flex flex-col items-center justify-center text-xs text-green-400 font-bold transition hover:bg-green-900/50"><span>Sec 105</span><span className="text-[9px] font-normal text-slate-400 mt-1">General</span></div>
+                    </div>
+                    <div className="w-full h-8 bg-slate-800 rounded mt-2 border border-slate-700 flex items-center justify-center text-[9px] text-slate-500 tracking-widest uppercase">Upper Bowl (GA)</div>
+                  </div>
+                </details>
+              </div>
+            )}
           </div>
 
           {/* Transfer History */}
@@ -1007,21 +820,26 @@ const OrderDetail = ({ order: initial, onBack }) => {
             </div>
             <div className="p-4">
               {order.transferHistory.length === 0 ? (
-                <p className="text-slate-600 text-xs italic">No share or transfer history.</p>
+                <p className="text-slate-500 text-xs italic text-center py-4">No transfer history for this order.</p>
               ) : (
                 <div className="space-y-3">
                   {order.transferHistory.map((t, i) => (
-                    <div key={i} className="bg-slate-900/60 border border-slate-700/50 rounded-lg p-3 text-xs space-y-1">
-                      <div className="flex justify-between items-center">
+                    <div key={i} className="bg-slate-900/60 border border-slate-700/50 rounded-lg p-3 text-xs space-y-1.5 relative overflow-hidden">
+                      <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                      <div className="flex justify-between items-center ml-2">
                         <span className="font-black text-blue-400 uppercase tracking-wide">{t.action}</span>
                         <span className="text-slate-500">{fmtHuman(t.date)}</span>
                       </div>
-                      <div><span className="text-slate-500">From: </span><span className="text-slate-300">{t.from}</span></div>
-                      <div><span className="text-slate-500">To: </span><span className="text-slate-300">{t.to}</span></div>
-                      <div className="text-slate-600 truncate">
-                        Pass: {typeof t.passId === "string" && t.passId.length > 30 ? t.passId.substring(0, 30) + "…" : t.passId}
+                      <div className="ml-2 grid grid-cols-12 gap-2 mt-2">
+                        <div className="col-span-12 md:col-span-5"><span className="text-slate-500 block text-[9px] uppercase">From</span><span className="text-slate-300 font-semibold">{t.from}</span></div>
+                        <div className="col-span-12 md:col-span-2 flex items-center justify-center text-slate-600 hidden md:flex">➔</div>
+                        <div className="col-span-12 md:col-span-5"><span className="text-slate-500 block text-[9px] uppercase">To</span><span className="text-slate-300 font-semibold">{t.to}</span></div>
                       </div>
-                      {t.note && <div className="text-slate-500 italic">Note: {t.note}</div>}
+                      <div className="ml-2 text-slate-500 mt-2 pt-2 border-t border-slate-700/50">
+                        <span className="block text-[9px] uppercase">Pass Included</span>
+                        {typeof t.passId === "string" && t.passId.length > 30 ? t.passId.substring(0, 30) + "…" : t.passId}
+                      </div>
+                      {t.note && <div className="ml-2 text-amber-400/80 italic mt-1 bg-amber-900/10 px-2 py-1 rounded inline-block">Note: {t.note}</div>}
                     </div>
                   ))}
                 </div>
@@ -1095,7 +913,7 @@ const SearchView = ({ orders, onSelectOrder }) => {
               type="text"
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
-              placeholder="Search by name, email, order number, event, or organization…"
+              placeholder="Search by name, email, order number, event, or org…"
               className="w-full pl-9 pr-4 py-2.5 rounded-lg text-sm focus:border-orange-500 transition"
             />
           </div>
@@ -1106,10 +924,7 @@ const SearchView = ({ orders, onSelectOrder }) => {
             className="py-2.5 px-3 rounded-lg text-sm focus:border-orange-500 transition w-44"
           />
           {hasFilter && (
-            <button
-              onClick={clearFilters}
-              className="px-4 py-2.5 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 text-sm font-bold transition"
-            >
+            <button onClick={clearFilters} className="px-4 py-2.5 rounded-lg border border-slate-600 text-slate-400 hover:text-white hover:border-slate-400 text-sm font-bold transition">
               Clear
             </button>
           )}
@@ -1135,8 +950,8 @@ const SearchView = ({ orders, onSelectOrder }) => {
                 <th className="px-4 py-3 text-left">Order #</th>
                 <th className="px-4 py-3 text-left">Fan Name</th>
                 <th className="px-4 py-3 text-left">Email</th>
-                <th className="px-4 py-3 text-left">Event</th>
-                <th className="px-4 py-3 text-left">Total</th>
+                <th className="px-4 py-3 text-left">Type</th>
+                <th className="px-4 py-3 text-left">Event / Pass</th>
                 <th className="px-4 py-3 text-left">Purchased</th>
                 <th className="px-4 py-3 text-left">Status</th>
               </tr>
@@ -1147,8 +962,12 @@ const SearchView = ({ orders, onSelectOrder }) => {
                   <td className="px-4 py-3 font-mono text-orange-400 text-xs">{o.orderNumber}</td>
                   <td className="px-4 py-3 font-bold whitespace-nowrap">{o.firstName} {o.lastName}</td>
                   <td className="px-4 py-3 text-slate-400 text-xs">{o.email}</td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded text-[9px] font-bold uppercase whitespace-nowrap ${o.itemCategories.includes('Pass') ? 'bg-indigo-900/30 text-indigo-300 border border-indigo-700/50' : 'bg-slate-700/30 text-slate-300 border border-slate-600'}`}>
+                      {o.itemCategories.includes('Pass') ? 'Pass' : 'Tickets'}
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-xs text-slate-300 max-w-48 truncate" title={o.eventName}>{o.eventName}</td>
-                  <td className="px-4 py-3 font-mono font-bold text-xs">${o.orderTotal.toFixed(2)}</td>
                   <td className="px-4 py-3 text-slate-400 text-xs whitespace-nowrap">{fmtDateShort(o.createdAt)}</td>
                   <td className="px-4 py-3"><StatusPill status={o.status} /></td>
                 </tr>
