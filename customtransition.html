@@ -1,71 +1,224 @@
-// Boilerplate content for required transition files
-const OVERLAY_CSS_CONTENT = `
-#frame { 
-    margin: 0; 
-    padding: 0; 
-    overflow: hidden; 
-    background-color: transparent; 
-}
-img { 
-    display: block; 
-    -webkit-user-select: none; 
-}
-`;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transition Builder | Hudl TV Support Suite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+    <style>
+        :root { 
+            --bg: #0f172a; 
+            --card: #1e293b; 
+            --text: #f8fafc; 
+            --primary: #f97316; 
+            --border: #334155; 
+        }
+        * { box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container { width: 100%; max-width: 800px; }
+        .back-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 2rem; display: inline-block; }
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff; }
+        p.subtitle { color: #94a3b8; margin-bottom: 2rem; }
+        
+        .tool-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+        }
 
-const POSITION_JSON_CONTENT = JSON.stringify({
-    "x": 0,
-    "y": 0,
-    "width": 1280,
-    "height": 720
-}, null, 4);
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; color: #94a3b8; }
+        input[type="text"], input[type="number"], input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            color: white;
+            font-family: inherit;
+        }
+        input:focus { outline: none; border-color: var(--primary); }
 
-// This ensures the transition name shows up correctly in Production Truck [cite: 415]
-function generateOverlayHtml(schoolName, frameCount, cutDelaySec) {
-    return `
+        .guidelines {
+            background: rgba(249, 115, 22, 0.1);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            font-size: 0.85rem;
+        }
+        .guidelines ul { margin: 0.5rem 0 0 1.25rem; padding: 0; color: #cbd5e1; }
+
+        #generateBtn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+        #generateBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #status { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--primary); font-weight: 600; }
+        .hint { font-size: 0.75rem; color: #64748b; margin-top: 0.4rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Command Center</a>
+        <h1>Transition Builder</h1>
+        <p class="subtitle">Automated .ptt packaging for Production Truck custom wipes.</p>
+
+        <div class="tool-card">
+            <div class="guidelines">
+                <strong>Standard Requirements:</strong>
+                <ul>
+                    [cite_start]<li>Background <strong>MUST</strong> be transparent[cite: 79, 691].</li>
+                    [cite_start]<li>Resolution: $1280\times720$ or $1920\times1080$[cite: 695].</li>
+                    [cite_start]<li>Duration: 1–3 seconds (60–120 frames)[cite: 690].</li>
+                </ul>
+            </div>
+
+            <div class="form-group">
+                <label>School Name</label>
+                <input type="text" id="schoolName" placeholder="e.g., Bear">
+                [cite_start]<div class="hint">This determines the "Abbreviated Name" shown in Production Truck[cite: 415].</div>
+            </div>
+
+            <div class="form-group">
+                <label>Cut Delay (Frame Number)</label>
+                <input type="number" id="cutDelayFrame" placeholder="e.g., 15" min="1">
+                [cite_start]<div class="hint">The specific frame where the screen is fully covered by the graphic[cite: 137].</div>
+            </div>
+
+            <div class="form-group">
+                <label>Upload Video</label>
+                <input type="file" id="videoFile" accept="video/mp4,video/quicktime">
+            </div>
+
+            <button id="generateBtn" onclick="processTransition()">BUILD .PTT PACKAGE</button>
+            <div id="status"></div>
+        </div>
+    </div>
+
+<script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: false });
+
+    // Boilerplate content for required transition files
+    const OVERLAY_CSS_CONTENT = `#frame { margin: 0; padding: 0; overflow: hidden; background-color: transparent; } img { display: block; -webkit-user-select: none; }`;
+    const POSITION_JSON_CONTENT = JSON.stringify({ "x": 0, "y": 0, "width": 1280, "height": 720 }, null, 4);
+
+    async function processTransition() {
+        const schoolName = document.getElementById('schoolName').value.trim();
+        const cutDelayFrame = parseInt(document.getElementById('cutDelayFrame').value);
+        const videoInput = document.getElementById('videoFile').files[0];
+        const statusEl = document.getElementById('status');
+        const btn = document.getElementById('generateBtn');
+
+        if (!schoolName || !cutDelayFrame || !videoInput) {
+            alert("Please complete all fields.");
+            return;
+        }
+
+        btn.disabled = true;
+
+        try {
+            statusEl.innerText = "Loading Video Engine...";
+            if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+            statusEl.innerText = "Processing Frames (Extracting PNGs)...";
+            ffmpeg.FS('writeFile', 'input', await fetchFile(videoInput));
+            
+            [cite_start]// Standardizing to 720p height as per guidelines [cite: 353, 695]
+            await ffmpeg.run('-i', 'input', '-vf', 'scale=-1:720,fps=30', 'images/%d.png');
+
+            const files = ffmpeg.FS('readdir', 'images').filter(f => f.endsWith('.png'));
+            const frameCount = files.length;
+            const cutDelaySec = (cutDelayFrame / 30).toFixed(2); [cite_start]// Convert frame to seconds [cite: 141]
+
+            statusEl.innerText = `Packaging ${frameCount} frames...`;
+
+            const zip = new JSZip();
+            const imagesFolder = zip.folder("images");
+
+            for (const file of files) {
+                const data = ffmpeg.FS('readFile', `images/${file}`);
+                imagesFolder.file(file, data);
+            }
+
+            const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="overlay.css">
-    <script src="jqueryui.js"><\/script>
+    <link rel="stylesheet" href="overlay.css">
 </head>
 <body style="margin:0; padding:0; background:transparent;">
     <div id="frame" style="width:1280px; height:720px; position:relative;"></div>
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>
     <script>
-    var transitionName = "${schoolName} TRANSITION";
-    var transitionAbbreviatedName = "${schoolName}"; // Shows in Production Truck [cite: 415]
-    var transitionCutDelay = ${cutDelaySec};
+        var transitionName = "${schoolName} TRANSITION";
+        var transitionAbbreviatedName = "${schoolName}";
+        var transitionCutDelay = ${cutDelaySec};
 
-    $(document).on("WjsReady", function(e) {
-        var params = {
-            name: transitionName,
-            abbreviatedName: transitionAbbreviatedName,
-            cutDelay: transitionCutDelay
-        };
-        bridge.transitionLoadedWithParams(JSON.stringify(params));
-    });
+        $(document).on("ready", function() {
+            var params = { name: transitionName, abbreviatedName: transitionAbbreviatedName, cutDelay: transitionCutDelay };
+            if (window.bridge) bridge.transitionLoadedWithParams(JSON.stringify(params));
+        });
 
-    function play() {
-        var $frame = $("#frame");
-        var $images = [];
-        // Loop through the rendered PNG sequence [cite: 245, 470]
-        for(var j = 1; j <= ${frameCount}; j++) {
-            $images[j-1] = $('<div style="position:absolute; z-index:' + j + '; display:none;"><img src="images/' + j + '.png" style="width:1280px;"></div>').appendTo($frame);
-        }
-        
-        var i = 0;
-        var myInterval = setInterval(function(){
-            if (i > 0) $images[i-1].hide();
-            if (i < ${frameCount}) {
-                $images[i].show();
-                i++;
-            } else {
-                clearInterval(myInterval);
-                $frame.empty();
+        function play() {
+            var $frame = $("#frame");
+            var $images = [];
+            for(var j = 1; j <= ${frameCount}; j++) {
+                $images[j-1] = $('<div style="position:absolute; z-index:' + j + '; display:none;"><img src="images/' + j + '.png" style="width:1280px;"></div>').appendTo($frame);
             }
-        }, 33.33); // Runs at roughly 30fps
-    }
+            var i = 0;
+            var interval = setInterval(function() {
+                if (i > 0) $images[i-1].hide();
+                if (i < ${frameCount}) { $images[i].show(); i++; }
+                else { clearInterval(interval); $frame.empty(); }
+            }, 33.33);
+        }
     <\/script>
 </body>
 </html>`;
-}
+
+            zip.file("overlay.html", htmlContent.trim());
+            zip.file("overlay.css", OVERLAY_CSS_CONTENT);
+            zip.file("position.json", POSITION_JSON_CONTENT);
+
+            const content = await zip.generateAsync({type:"blob"});
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(content);
+            link.download = `${schoolName}.ptt`; [cite_start]// Save as .ptt file type [cite: 406]
+            link.click();
+
+            statusEl.innerText = "Success! .ptt file downloaded.";
+            
+        } catch (err) {
+            console.error(err);
+            statusEl.innerText = "Error: Ensure your video has a transparent alpha channel.";
+        } finally {
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
