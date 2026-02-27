@@ -8,233 +8,105 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
     <style>
-        :root { 
-            --bg: #0f172a; 
-            --card: #1e293b; 
-            --text: #f8fafc; 
-            --primary: #f97316; 
-            --border: #334155; 
-        }
-        * { box-sizing: border-box; }
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            min-height: 100vh; 
-            margin: 0; 
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        :root { --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --primary: #f97316; --border: #334155; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 2rem; display: flex; flex-direction: column; align-items: center; }
         .container { width: 100%; max-width: 800px; }
-        .back-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 600; margin-bottom: 2rem; display: inline-block; }
-        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; color: #fff; }
-        p.subtitle { color: #94a3b8; margin-bottom: 2rem; }
-        
-        .tool-card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 1rem;
-            padding: 2.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-        }
-
+        .tool-card { background: var(--card); border: 1px solid var(--border); border-radius: 1rem; padding: 2.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
         .form-group { margin-bottom: 1.5rem; }
-        label { display: block; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; color: #94a3b8; }
-        input[type="text"], input[type="number"], input[type="file"], select {
-            width: 100%;
-            padding: 0.75rem;
-            background: #0f172a;
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            color: white;
-            font-family: inherit;
-        }
-        input:focus, select:focus { outline: none; border-color: var(--primary); }
-
-        .guidelines {
-            background: rgba(249, 115, 22, 0.1);
-            border: 1px solid rgba(249, 115, 22, 0.2);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 2rem;
-            font-size: 0.85rem;
-        }
-        .guidelines ul { margin: 0.5rem 0 0 1.25rem; padding: 0; color: #cbd5e1; }
-
-        #generateBtn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 0.5rem;
-            font-weight: 800;
-            cursor: pointer;
-            width: 100%;
-            transition: opacity 0.2s;
-        }
-        #generateBtn:disabled { opacity: 0.5; cursor: not-allowed; }
-        #status { margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--primary); font-weight: 600; }
-        .hint { font-size: 0.75rem; color: #64748b; margin-top: 0.4rem; }
-        .force-transparency {
-            border: 1px dashed var(--primary);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1.5rem;
-        }
+        label { display: block; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem; color: #94a3b8; }
+        input, select { width: 100%; padding: 0.75rem; background: #0f172a; border: 1px solid var(--border); border-radius: 0.5rem; color: white; }
+        #generateBtn { background: var(--primary); color: white; border: none; padding: 1rem; border-radius: 0.5rem; font-weight: 800; cursor: pointer; width: 100%; margin-top: 1rem; }
+        #status { margin-top: 1rem; text-align: center; font-weight: 600; color: var(--primary); }
+        /* Debug Console Styles */
+        #debugConsole { background: #000; color: #0f0; font-family: 'Courier New', monospace; font-size: 0.75rem; padding: 1rem; border-radius: 0.5rem; margin-top: 2rem; height: 150px; overflow-y: auto; border: 1px solid #334155; }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <a href="index.html" class="back-link">← Back to Command Center</a>
         <h1>Transition Builder</h1>
-        <p class="subtitle">Automated .ptt packaging for Production Truck custom wipes.</p>
-
         <div class="tool-card">
-            <div class="guidelines">
-                <strong>Hudl Guidelines:</strong>
-                <ul>
-                    <li>Duration: 1–3 seconds (60–120 frames)[cite: 690].</li>
-                    <li>Resolution: $1280\times720$ (preferred) or $1920\times1080$[cite: 695].</li>
-                    <li>Standard Requirement: MUST have a transparent alpha channel[cite: 691].</li>
-                </ul>
-            </div>
-
             <div class="form-group">
                 <label>School Name</label>
                 <input type="text" id="schoolName" placeholder="e.g., Bear">
-                <div class="hint">Sets the "Abbreviated Name" shown in Production Truck.</div>
             </div>
-
             <div class="form-group">
-                <label>Cut Delay (Frame Number out of 30)</label>
-                <input type="number" id="cutDelayFrame" placeholder="e.g., 15" min="1">
-                <div class="hint">Frame where the graphic covers the entire screen[cite: 137, 141].</div>
+                <label>Cut Delay Frame</label>
+                <input type="number" id="cutDelayFrame" value="15">
             </div>
-
-            <div class="force-transparency">
-                <label>Force Transparency (Chroma Key)</label>
+            <div class="form-group">
+                <label>Transparency Mode</label>
                 <select id="chromaKey">
-                    <option value="none">None (Keep existing Alpha)</option>
-                    <option value="0x000000">Remove Solid Black (#000000)</option>
-                    <option value="0x00FF00">Remove Solid Green (#00FF00)</option>
+                    <option value="none">Detect Existing Alpha (ProRes 4444)</option>
+                    <option value="colorkey=0x000000:0.1:0.1">Force Remove Black</option>
+                    <option value="colorkey=0x00FF00:0.1:0.1">Force Remove Green</option>
                 </select>
-                <div class="hint">Use this ONLY if the video is missing an alpha channel.</div>
             </div>
-
             <div class="form-group">
                 <label>Upload Video</label>
-                <input type="file" id="videoFile" accept="video/mp4,video/quicktime">
+                <input type="file" id="videoFile">
             </div>
-
-            <button id="generateBtn" onclick="processTransition()">BUILD .PTT PACKAGE</button>
-            <div id="status"></div>
+            <button id="generateBtn" onclick="processTransition()">BUILD PACKAGE</button>
+            <div id="status">Ready</div>
+            <div id="debugConsole">DEBUG LOG:<br></div>
         </div>
     </div>
 
 <script>
     const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: false });
+    const ffmpeg = createFFmpeg({ log: true });
+    
+    // Pipe FFmpeg logs to our on-screen console
+    ffmpeg.setLogger(({ type, message }) => {
+        const consoleEl = document.getElementById('debugConsole');
+        consoleEl.innerHTML += `[${type}] ${message}<br>`;
+        consoleEl.scrollTop = consoleEl.scrollHeight;
+    });
 
     async function processTransition() {
-        const schoolName = document.getElementById('schoolName').value.trim();
-        const cutDelayFrame = parseInt(document.getElementById('cutDelayFrame').value);
+        const btn = document.getElementById('generateBtn');
+        const status = document.getElementById('status');
         const chromaKey = document.getElementById('chromaKey').value;
         const videoInput = document.getElementById('videoFile').files[0];
-        const statusEl = document.getElementById('status');
-        const btn = document.getElementById('generateBtn');
-
-        if (!schoolName || !cutDelayFrame || !videoInput) {
-            alert("Please complete all fields.");
-            return;
-        }
-
+        
+        if (!videoInput) return alert("Select a file.");
         btn.disabled = true;
 
         try {
-            statusEl.innerText = "Loading Video Engine...";
+            status.innerText = "Loading FFmpeg...";
             if (!ffmpeg.isLoaded()) await ffmpeg.load();
 
-            statusEl.innerText = "Processing Frames...";
             ffmpeg.FS('writeFile', 'input', await fetchFile(videoInput));
             
-            // Build the FFmpeg filter chain
+            status.innerText = "Extracting Frames...";
             let filter = 'scale=-1:720,fps=30';
-            if (chromaKey !== 'none') {
-                // Force transparency by removing selected color [cite: 692]
-                filter = `colorkey=${chromaKey}:0.1:0.1,${filter}`;
-            }
+            if (chromaKey !== 'none') filter = `${chromaKey},${filter}`;
 
-            await ffmpeg.run('-i', 'input', '-vf', filter, 'images/%d.png');
+            // We use -pix_fmt rgba to ensure the output sequence MUST have an alpha channel
+            await ffmpeg.run('-i', 'input', '-vf', filter, '-pix_fmt', 'rgba', 'images/%d.png');
 
             const files = ffmpeg.FS('readdir', 'images').filter(f => f.endsWith('.png'));
-            const frameCount = files.length;
-            const cutDelaySec = (cutDelayFrame / 30).toFixed(2); // Convert to seconds [cite: 141]
+            if (files.length === 0) throw new Error("No frames generated. Check video format.");
 
-            statusEl.innerText = `Packaging ${frameCount} frames...`;
-
+            status.innerText = `Zipping ${files.length} frames...`;
             const zip = new JSZip();
-            const imagesFolder = zip.folder("images");
-
-            for (const file of files) {
-                const data = ffmpeg.FS('readFile', `images/${file}`);
-                imagesFolder.file(file, data);
+            const imgFolder = zip.folder("images");
+            for (const f of files) {
+                imgFolder.file(f, ffmpeg.FS('readFile', `images/${f}`));
             }
 
-            // Generate overlay.html [cite: 236, 422, 470]
-            const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <style>#frame { margin: 0; padding: 0; overflow: hidden; background-color: transparent; } img { display: block; width: 100%; }</style>
-</head>
-<body style="margin:0; padding:0; background:transparent;">
-    <div id="frame" style="width:1280px; height:720px; position:relative;"></div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"><\/script>
-    <script>
-        var transitionName = "${schoolName} TRANSITION";
-        var transitionAbbreviatedName = "${schoolName}";
-        var transitionCutDelay = ${cutDelaySec};
-
-        $(document).on("ready", function() {
-            var params = { name: transitionName, abbreviatedName: transitionAbbreviatedName, cutDelay: transitionCutDelay };
-            if (window.bridge) bridge.transitionLoadedWithParams(JSON.stringify(params));
-        });
-
-        function play() {
-            var $frame = $("#frame");
-            var $images = [];
-            for(var j = 1; j <= ${frameCount}; j++) {
-                $images[j-1] = $('<div style="position:absolute; z-index:' + j + '; display:none;"><img src="images/' + j + '.png" style="width:1280px;"></div>').appendTo($frame);
-            }
-            var i = 0;
-            var interval = setInterval(function() {
-                if (i > 0) $images[i-1].hide();
-                if (i < ${frameCount}) { $images[i].show(); i++; }
-                else { clearInterval(interval); $frame.empty(); }
-            }, 33.33);
-        }
-    <\/script>
-</body>
-</html>`;
-
-            zip.file("overlay.html", htmlContent.trim());
-            zip.file("overlay.css", "#frame { background: transparent; }");
-            zip.file("position.json", JSON.stringify({ x: 0, y: 0, width: 1280, height: 720 }));
+            // Minimalist overlay.html to verify functionality
+            zip.file("overlay.html", `<html><body style="background:transparent;"><script>function play(){ /* automated */ }<\/script></body></html>`);
+            zip.file("position.json", JSON.stringify({width:1280, height:720}));
 
             const content = await zip.generateAsync({type:"blob"});
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(content);
-            link.download = `${schoolName}.ptt`;
-            link.click();
-
-            statusEl.innerText = "Success! .ptt file ready.";
-            
-        } catch (err) {
-            console.error(err);
-            statusEl.innerText = "Error: Check video format/alpha channel[cite: 691].";
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(content);
+            a.download = "custom_transition.ptt";
+            a.click();
+            status.innerText = "Done!";
+        } catch (e) {
+            status.innerText = "Error! See Debug Log below.";
+            console.error(e);
         } finally {
             btn.disabled = false;
         }
