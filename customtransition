@@ -1,145 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Production Truck Transition Builder</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; max-width: 600px; margin: 0 auto; background: #f4f4f5; }
-        .card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { font-size: 24px; margin-bottom: 20px; }
-        label { display: block; font-weight: bold; margin-top: 15px; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { background: #0056b3; color: white; border: none; padding: 12px 20px; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 20px; width: 100%; }
-        button:disabled { background: #999; cursor: not-allowed; }
-        #status { margin-top: 20px; font-weight: bold; color: #333; text-align: center; }
-    </style>
-</head>
-<body>
-
-<div class="card">
-    <h1>Transition Builder</h1>
-    
-    <label for="schoolName">School / Organization Name</label>
-    <input type="text" id="schoolName" placeholder="e.g., Bear">
-
-    <label for="cutDelayFrame">Cut Delay Frame (Out of 30fps)</label>
-    <input type="number" id="cutDelayFrame" placeholder="e.g., 15 (which equals 0.50s)" min="1">
-
-    <label for="videoFile">Upload Transparent Video (MOV/MP4)</label>
-    <input type="file" id="videoFile" accept="video/mp4,video/quicktime">
-
-    <button id="generateBtn" onclick="processTransition()">Generate .ptt File</button>
-    
-    <div id="status"></div>
-</div>
-
-<script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({ log: true });
-
-    async function processTransition() {
-        const schoolName = document.getElementById('schoolName').value;
-        const cutDelayFrame = parseInt(document.getElementById('cutDelayFrame').value);
-        const videoInput = document.getElementById('videoFile').files[0];
-        const statusEl = document.getElementById('status');
-        const btn = document.getElementById('generateBtn');
-
-        if (!schoolName || !cutDelayFrame || !videoInput) {
-            alert("Please fill out all fields.");
-            return;
-        }
-
-        btn.disabled = true;
-
-        try {
-            // 1. Calculate Cut Delay [cite: 139, 140, 141]
-            const cutDelaySec = (cutDelayFrame / 30).toFixed(2);
-            
-            statusEl.innerText = "Loading video engine... (This may take a moment on first load)";
-            if (!ffmpeg.isLoaded()) await ffmpeg.load();
-
-            statusEl.innerText = "Processing video to PNG sequence (720p at 30fps)...";
-            ffmpeg.FS('writeFile', 'input_video', await fetchFile(videoInput));
-            
-            // Run FFmpeg to resize to 720p height, 30fps, retaining Alpha channel [cite: 264, 352, 353]
-            await ffmpeg.run('-i', 'input_video', '-vf', 'scale=-1:720,fps=30', 'frame_%d.png');
-
-            // Count the generated frames [cite: 245, 255]
-            const fileList = ffmpeg.FS('readdir', '/');
-            const pngFiles = fileList.filter(f => f.endsWith('.png'));
-            const frameCount = pngFiles.length;
-
-            statusEl.innerText = `Packaging ${frameCount} frames into .ptt...`;
-
-            // 2. Initialize JSZip
-            const zip = new JSZip();
-            const imagesFolder = zip.folder("images"); [cite: 397]
-
-            // Add PNGs to the zip folder
-            for (let i = 1; i <= frameCount; i++) {
-                const fileName = `frame_${i}.png`;
-                const data = ffmpeg.FS('readFile', fileName);
-                imagesFolder.file(`${i}.png`, data); // Save as 1.png, 2.png as Sublime expects [cite: 249]
-                // Clean up FFmpeg memory
-                ffmpeg.FS('unlink', fileName); 
-            }
-
-            // 3. Generate overlay.html [cite: 194, 229-231, 236-239, 245]
-            const htmlContent = `
-<script>
-var transitionName = "${schoolName} TRANSITION";
-var transitionAbbreviatedName = "${schoolName}";
-var transitionCutDelay = ${cutDelaySec};
-
-jQuery.fx.interval = 1;
-
-$(document).on("WjsReady", function(e) {
-    var params = {
-        name: transitionName,
-        abbreviatedName: transitionAbbreviatedName,
-        cutDelay: transitionCutDelay
-    };
-    bridge.transitionLoadedWithParams(JSON.stringify(params));
-});
-
-function play() {
-    bridge.log("play");
-    var $images = [];
-    var $frame = $("#frame");
-    for(var j = 1; j <= ${frameCount}; j++) {
-        $images[j - 1] = $('<div style="position:absolute; z-index:' + j + '; display: none;"><img src="images/' + j + '.png" style="width:1280px;"></div>').appendTo($frame);
-    }
-    // ... Additional playback logic omitted for brevity, ensure your full JS goes here
+// Boilerplate content for required transition files
+const OVERLAY_CSS_CONTENT = `
+#frame { 
+    margin: 0; 
+    padding: 0; 
+    overflow: hidden; 
+    background-color: transparent; 
 }
-<\/script>
-<div id="frame" style="width:1280px; height:720px; position:relative;"></div>
-            `;
-            zip.file("overlay.html", htmlContent.trim()); [cite: 194]
+img { 
+    display: block; 
+    -webkit-user-select: none; 
+}
+`;
 
-            // Add placeholder CSS and JSON (You will need to paste your actual default code here)
-            zip.file("overlay.css", "/* Paste your overlay.css content here */"); [cite: 151]
-            zip.file("position.json", "{}"); [cite: 153]
+const POSITION_JSON_CONTENT = JSON.stringify({
+    "x": 0,
+    "y": 0,
+    "width": 1280,
+    "height": 720
+}, null, 4);
 
-            // 4. Download as .ptt [cite: 406, 527]
-            const content = await zip.generateAsync({type:"blob"});
-            const downloadLink = document.createElement("a");
-            downloadLink.href = URL.createObjectURL(content);
-            downloadLink.download = `${schoolName}_Transition.ptt`;
-            downloadLink.click();
+// This ensures the transition name shows up correctly in Production Truck [cite: 415]
+function generateOverlayHtml(schoolName, frameCount, cutDelaySec) {
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="overlay.css">
+    <script src="jqueryui.js"><\/script>
+</head>
+<body style="margin:0; padding:0; background:transparent;">
+    <div id="frame" style="width:1280px; height:720px; position:relative;"></div>
 
-            statusEl.innerText = "Success! .ptt file downloaded.";
-            
-        } catch (err) {
-            console.error(err);
-            statusEl.innerText = "An error occurred. Check the console.";
-        } finally {
-            btn.disabled = false;
+    <script>
+    var transitionName = "${schoolName} TRANSITION";
+    var transitionAbbreviatedName = "${schoolName}"; // Shows in Production Truck [cite: 415]
+    var transitionCutDelay = ${cutDelaySec};
+
+    $(document).on("WjsReady", function(e) {
+        var params = {
+            name: transitionName,
+            abbreviatedName: transitionAbbreviatedName,
+            cutDelay: transitionCutDelay
+        };
+        bridge.transitionLoadedWithParams(JSON.stringify(params));
+    });
+
+    function play() {
+        var $frame = $("#frame");
+        var $images = [];
+        // Loop through the rendered PNG sequence [cite: 245, 470]
+        for(var j = 1; j <= ${frameCount}; j++) {
+            $images[j-1] = $('<div style="position:absolute; z-index:' + j + '; display:none;"><img src="images/' + j + '.png" style="width:1280px;"></div>').appendTo($frame);
         }
+        
+        var i = 0;
+        var myInterval = setInterval(function(){
+            if (i > 0) $images[i-1].hide();
+            if (i < ${frameCount}) {
+                $images[i].show();
+                i++;
+            } else {
+                clearInterval(myInterval);
+                $frame.empty();
+            }
+        }, 33.33); // Runs at roughly 30fps
     }
-</script>
-
+    <\/script>
 </body>
-</html>
+</html>`;
+}
